@@ -1,0 +1,10 @@
+{
+  "hosting": [
+    {
+      "site": "and-users-portal",
+      "public": "./dist/andPanelUser/browser",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [{ "source": "**", "destination": "/index.html" }]
+    }
+  ]
+}

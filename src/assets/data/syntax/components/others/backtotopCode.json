@@ -1,0 +1,5 @@
+{
+    "backToTopBasicCode": "<nz-back-top></nz-back-top>",
+    "backToTopCustomStyleCode": "import { Component } from '@angular\/core';\r\n\r\n@Component({\r\n    selector: 'nz-demo-back-top-custom',\r\n    template: `\r\n        <nz-back-top [nzTemplate]=\"tpl\" [nzVisibilityHeight]=\"100\" (nzOnClick)=\"notify()\">\r\n            <ng-template #tpl>\r\n                <div class=\"ant-back-top-inner\">UP<\/div>\r\n            <\/ng-template>\r\n        <\/nz-back-top>\r\n    `\r\n})\r\nexport class NzDemoBackTopCustomComponent {\r\n    notify(): void {\r\n        console.log('notify');\r\n    }\r\n}",
+    "backToTopUsingNzTargetCode": "<div style=\"background-image: url(assets\/images\/object-bg.jpg); overflow-y: scroll; height: 300px;\">\r\n    <div style=\"height: 1500px;\"><\/div>\r\n    <nz-back-top [nzTarget]=\"divTarget\"><\/nz-back-top>\r\n<\/div>"
+}

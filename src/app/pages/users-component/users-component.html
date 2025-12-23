@@ -1,0 +1,641 @@
+<div class="space-y-6">
+
+    <!-- FILTROS -->
+    <div class="flex flex-wrap items-center gap-4 mb-4">
+        <!-- Buscar por nombre -->
+        <div class="flex items-center flex-1 max-w-md">
+            <div class="relative w-full">
+                <input type="text"
+                    class="form-control w-full rounded-lg border border-slate-300 px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                    placeholder="Buscar por Nombre" [(ngModel)]="nameFilter" (input)="applyFilters()" />
+                <span class="absolute inset-y-0 right-3 flex items-center text-slate-400">
+                    <i class="bi bi-search"></i>
+                </span>
+            </div>
+        </div>
+
+        <div class="flex items-center flex-1 max-w-md">
+            <div class="relative w-full">
+                <input type="text"
+                    class="form-control w-full rounded-lg border border-slate-300 px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                    placeholder="Buscar por Matrícula" [(ngModel)]="studentIdFilter" (input)="applyFilters()" />
+                <span class="absolute inset-y-0 right-3 flex items-center text-slate-400">
+                    <i class="bi bi-search"></i>
+                </span>
+            </div>
+        </div>
+
+        <!-- Buscar por correo -->
+        <div class="flex items-center flex-1 max-w-md">
+            <div class="relative w-full">
+                <input type="text"
+                    class="form-control w-full rounded-lg border border-slate-300 px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                    placeholder="Buscar por Correo" [(ngModel)]="emailFilter" (input)="applyFilters()" />
+                <span class="absolute inset-y-0 right-3 flex items-center text-slate-400">
+                    <i class="bi bi-search"></i>
+                </span>
+            </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="flex items-center gap-2">
+            <button class="btn btn-primary px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+                (click)="loadUsers()" [disabled]="loading">
+                {{ loading ? 'Cargando...' : 'Cargar Usuarios' }}
+            </button>
+
+            <!--   <button
+                class="btn btn-outline-secondary px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100"
+                type="button" (click)="clearFilters()">
+                Limpiar
+            </button> -->
+        </div>
+    </div>
+
+    <!-- TABLA -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+
+        <!-- CONTENEDOR CON ALTURA FIJA -->
+        <div class="h-[220px] overflow-hidden">
+
+            <!-- SCROLL SOLO EN TABLA -->
+            <div class="h-full overflow-y-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="text-white sticky top-0 z-10" style="background-color:#235000;">
+                        <tr class="text-left">
+                            <th class="px-4 py-3 font-semibold">Nombre</th>
+                            <th class="px-4 py-3 font-semibold">Correo</th>
+                            <th class="px-4 py-3 font-semibold">Matricula</th>
+                            <th class="px-4 py-3 font-semibold">Teléfono</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-slate-200">
+                        <tr *ngFor="let u of pagedUsers; let i = index" (click)="selectUser(u)"
+                            class="cursor-pointer hover:bg-slate-50 transition" [ngClass]="[
+      i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40',
+      selectedUser?.uid === u.uid ? 'ring-2 ring-[#235000]/30 bg-[#235000]/5' : ''
+    ]">
+
+                            <td class="px-4 py-3 font-medium text-slate-800 whitespace-nowrap">
+                                {{ getFullName(u) }}
+                            </td>
+
+                            <td class="px-4 py-3 text-slate-700">
+                                <span class="break-all">{{ u.email }}</span>
+                            </td>
+
+                            <td class="px-4 py-3 text-slate-700 whitespace-nowrap">
+                                {{ u.studentId || '-' }}
+                            </td>
+
+                            <td class="px-4 py-3 text-slate-700 whitespace-nowrap">
+                                {{ u.phoneNumber || '-' }}
+                            </td>
+                        </tr>
+
+                        <tr *ngIf="!loading && pagedUsers.length === 0">
+                            <td colspan="4" class="text-center py-8 text-slate-500">
+                                No se encontraron usuarios.
+                            </td>
+                        </tr>
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+
+        <!-- PAGINACIÓN (se queda fija abajo, sin moverse) -->
+        <div class="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-white">
+            <div class="text-sm text-slate-600">
+                Mostrando
+                <span class="font-semibold">{{ fromIndex }}</span>
+                -
+                <span class="font-semibold">{{ toIndex }}</span>
+                de
+                <span class="font-semibold">{{ totalItems }}</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button
+                    class="btn btn-outline-secondary px-3 py-1 rounded-lg border border-slate-300 text-slate-700 disabled:opacity-50"
+                    (click)="prevPage()" [disabled]="currentPage === 1" type="button">
+                    ‹
+                </button>
+
+                <span class="text-sm font-semibold text-slate-700">
+                    Página {{ currentPage }} / {{ totalPages }}
+                </span>
+
+                <button
+                    class="btn btn-outline-secondary px-3 py-1 rounded-lg border border-slate-300 text-slate-700 disabled:opacity-50"
+                    (click)="nextPage()" [disabled]="currentPage === totalPages || totalPages === 0" type="button">
+                    ›
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL INFO USUARIO -->
+    <!-- CONTENEDOR GENERAL (solo si hay selectedUser) -->
+    <div *ngIf="selectedUser" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+
+        <!-- HEADER (siempre visible) -->
+        <div class="mb-6 flex items-center justify-between gap-4">
+            <!-- Izquierda -->
+            <h2 class="text-lg font-semibold text-slate-700 whitespace-nowrap">
+                Información de Usuario
+            </h2>
+
+            <!-- Derecha -->
+            <div class="flex items-center gap-3 ml-auto">
+                <!-- Tabs -->
+                <button type="button" (click)="setSection('usuario')"
+                    class="px-5 py-2 rounded-full border text-sm font-semibold transition-colors duration-200"
+                    [ngClass]="activeSection === 'usuario'
+          ? 'bg-[#235000] text-white border-[#235000]'
+          : 'border-slate-300 text-slate-600 hover:bg-[#235000] hover:text-white hover:border-[#235000]'">
+                    Usuario
+                </button>
+
+                <button type="button" (click)="setSection('pases')"
+                    class="px-5 py-2 rounded-full border text-sm font-semibold transition-colors duration-200"
+                    [ngClass]="activeSection === 'pases'
+          ? 'bg-[#235000] text-white border-[#235000]'
+          : 'border-slate-300 text-slate-600 hover:bg-[#235000] hover:text-white hover:border-[#235000]'">
+                    Pases
+                </button>
+
+                <button type="button" (click)="setSection('mensajes')"
+                    class="px-5 py-2 rounded-full border text-sm font-semibold transition-colors duration-200"
+                    [ngClass]="activeSection === 'mensajes'
+          ? 'bg-[#235000] text-white border-[#235000]'
+          : 'border-slate-300 text-slate-600 hover:bg-[#235000] hover:text-white hover:border-[#235000]'">
+                    Mensajes
+                </button>
+
+                <button type="button" (click)="setSection('historial')"
+                    class="px-5 py-2 rounded-full border text-sm font-semibold transition-colors duration-200"
+                    [ngClass]="activeSection === 'historial'
+          ? 'bg-[#235000] text-white border-[#235000]'
+          : 'border-slate-300 text-slate-600 hover:bg-[#235000] hover:text-white hover:border-[#235000]'">
+                    Historial
+                </button>
+
+                <button type="button" (click)="setSection('transferencias')"
+                    class="px-5 py-2 rounded-full border text-sm font-semibold transition-colors duration-200"
+                    [ngClass]="activeSection === 'transferencias'
+          ? 'bg-[#235000] text-white border-[#235000]'
+          : 'border-slate-300 text-slate-600 hover:bg-[#235000] hover:text-white hover:border-[#235000]'">
+                    Transferencias
+                </button>
+
+                <!-- Actualizar (solo tiene sentido en Usuario) -->
+                <button type="button"
+                    class="px-5 py-2 rounded-lg text-white font-semibold transition disabled:opacity-60"
+                    style="background-color:#235000;" (click)="updateSelectedUser()"
+                    [disabled]="saving || activeSection !== 'usuario'">
+                    {{ saving ? 'Actualizando...' : 'Actualizar' }}
+                </button>
+            </div>
+        </div>
+
+        <!-- ====== 1) PANEL USUARIO ====== -->
+        <div *ngIf="activeSection === 'usuario'">
+            <!-- (Tu FORM actual tal cual) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Nombre</label>
+                    <input class="form-control w-full rounded-lg border border-slate-300 px-3 py-2"
+                        [(ngModel)]="editUser.firstName" />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Apellidos</label>
+                    <input class="form-control w-full rounded-lg border border-slate-300 px-3 py-2"
+                        [(ngModel)]="editUser.lastName" />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Display Name</label>
+                    <input class="form-control w-full rounded-lg border border-slate-300 px-3 py-2"
+                        [(ngModel)]="editUser.displayName" />
+                </div>
+                <div class="md:col-span-2">
+                    <label class="text-sm font-medium text-slate-600">Correo</label>
+                    <input class="form-control w-full rounded-lg border border-slate-300 px-3 py-2"
+                        [(ngModel)]="editUser.email" />
+                </div>
+                <div class="flex items-center gap-2 mt-6">
+                    <input type="checkbox" [(ngModel)]="editUser.emailVerified" />
+                    <label class="text-sm font-medium text-slate-600">Email verificado</label>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Teléfono</label>
+                    <input class="form-control w-full rounded-lg border border-slate-300 px-3 py-2"
+                        [(ngModel)]="editUser.phoneNumber" />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Matrícula</label>
+                    <input class="form-control w-full rounded-lg border border-slate-300 px-3 py-2"
+                        [(ngModel)]="editUser.studentId" />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Username</label>
+                    <input class="form-control w-full rounded-lg border border-slate-300 px-3 py-2"
+                        [(ngModel)]="editUser.username" />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Ocupación</label>
+                    <input class="form-control w-full rounded-lg border border-slate-300 px-3 py-2"
+                        [(ngModel)]="editUser.occupation" />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Estatus</label>
+                    <input class="form-control w-full rounded-lg border border-slate-300 px-3 py-2"
+                        [(ngModel)]="editUser.status" />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Turno</label>
+                    <select class="form-control w-full rounded-lg border border-slate-300 px-3 py-2"
+                        [(ngModel)]="editUser.turno">
+                        <option value="1">Día</option>
+                        <option value="2">Tarde</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Turno</label>
+                    <select class="form-control w-full rounded-lg border border-slate-300 px-3 py-2"
+                        [(ngModel)]="editUser.roundTrip">
+                        <option value="sencillo">Sencillo</option>
+                        <option value="redondo">Redondo</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2 mt-6">
+                    <input type="checkbox" [(ngModel)]="editUser.terms" />
+                    <label class="text-sm font-medium text-slate-600">Términos aceptados</label>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="text-sm font-medium text-slate-600">Ruta default</label>
+
+                    <select class="form-control w-full rounded-lg border border-slate-300 px-3 py-2"
+                        [(ngModel)]="editUser.defaultRoute" [disabled]="routesLoading">
+                        <option value="">
+                            {{ routesLoading ? 'Cargando rutas...' : 'Selecciona una ruta' }}
+                        </option>
+                        <option *ngFor="let r of routes" [value]="r.id">
+                            {{ r.name }}
+                        </option>
+                    </select>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ====== 2) PANEL PASES ====== -->
+        <div *ngIf="activeSection === 'pases'">
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+
+                <!-- HEADER -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+                    <h3 class="text-base font-semibold text-slate-700">
+                        Pases (últimos 10)
+                    </h3>
+
+                    <button type="button"
+                        class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 transition disabled:opacity-50"
+                        (click)="getLatestPurchases(selectedUser.uid!)" [disabled]="loadingLatestPurchases">
+                        {{ loadingLatestPurchases ? 'Cargando...' : 'Recargar' }}
+                    </button>
+                </div>
+
+                <!-- TABLA -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+
+                        <!-- THEAD (igual que usuarios) -->
+                        <thead class="text-white" style="background-color:#235000;">
+                            <tr class="text-left">
+                                <th class="px-6 py-3 font-semibold">Pase</th>
+                                <th class="px-6 py-3 font-semibold">Ruta</th>
+                                <th class="px-6 py-3 font-semibold">Parada</th>
+                                <th class="px-6 py-3 font-semibold">Turno</th>
+                                <th class="px-6 py-3 font-semibold">Estatus</th>
+                                <th class="px-6 py-3 font-semibold text-right">Precio</th>
+                                <th class="px-6 py-3 font-semibold text-right">...</th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-slate-200">
+
+                            <!-- LOADING -->
+                            <tr *ngIf="loadingLatestPurchases">
+                                <td colspan="5" class="px-6 py-8 text-center text-slate-500">
+                                    Cargando pases...
+                                </td>
+                            </tr>
+
+                            <!-- EMPTY -->
+                            <tr *ngIf="!loadingLatestPurchases && latestPurchases.length === 0">
+                                <td colspan="5" class="px-6 py-8 text-center text-slate-500">
+                                    No hay pases para este usuario.
+                                </td>
+                            </tr>
+
+                            <!-- ROWS -->
+                            <tr *ngFor="let p of latestPurchases; let i = index" (click)="selectPurchase(p)"
+                                class="cursor-pointer hover:bg-slate-50 transition" [ngClass]="{
+      'bg-[#235000]/10 ring-2 ring-[#235000]/30': selectedPurchase?.id === p.id
+    }"> <!-- PASE -->
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col gap-1">
+                                        <span
+                                            class="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-blue-100 text-blue-700 w-fit">
+                                            {{ p.name }}
+                                        </span>
+
+                                        <span class="text-xs text-slate-500">
+                                            {{ p.creation_date | date:'medium' }}
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <!-- Ruta -->
+                                <td class="px-6 py-4 text-slate-700">
+                                    {{ p.routeName }}
+                                </td>
+                                <!-- PARADA -->
+                                <td class="px-6 py-4 text-slate-700">
+                                    {{ p.stopDescription }}
+                                </td>
+                                <!-- TURNO -->
+                                <td class="px-6 py-4 text-slate-700">
+                                    {{ p.round }}
+                                </td>
+
+                                <!-- ESTATUS -->
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-wrap gap-1">
+
+                                        <span *ngIf="p.status === 'completed' && p.is_courtesy"
+                                            class="px-2 py-1 rounded text-xs font-semibold bg-yellow-100 text-yellow-800">
+                                            Cortesía
+                                        </span>
+
+                                        <span *ngIf="p.status === 'completed' && !p.is_courtesy"
+                                            class="px-2 py-1 rounded text-xs font-semibold bg-cyan-100 text-cyan-800">
+                                            Pagado
+                                        </span>
+
+                                        <span *ngIf="p.status !== 'completed'"
+                                            class="px-2 py-1 rounded text-xs font-semibold bg-red-100 text-red-800">
+                                            Parcial
+                                        </span>
+
+                                        <span *ngIf="p.baja"
+                                            class="px-2 py-1 rounded text-xs font-semibold bg-fuchsia-100 text-fuchsia-800">
+                                            Baja
+                                        </span>
+
+                                        <span *ngIf="p.payment"
+                                            class="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-800">
+                                            {{ p.payment }}
+                                        </span>
+
+                                        <span *ngIf="p.active"
+                                            class="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-800">
+                                            Activo
+                                        </span>
+
+                                    </div>
+                                </td>
+
+                                <!-- PRECIO -->
+                                <td class="px-6 py-4 text-right font-semibold text-slate-700">
+                                    {{ p.price | currency:p.currency:'symbol' }}
+                                </td>
+
+                                <!-- ABONO -->
+                                <td class="px-6 py-4 text-right" data-purchase-menu>
+                                    <button type="button" class="px-2 py-1 rounded hover:bg-slate-100"
+                                        (click)="togglePurchaseMenu(p, $event)">
+                                        <span class="text-xl leading-none text-slate-500">…</span>
+                                    </button>
+
+                                    <!-- Dropdown -->
+                                    <div *ngIf="purchaseActionMenuOpenId === (p.id ?? p.idBoardingPass ?? '')"
+                                        class="absolute mt-2 right-8 z-50 w-56 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden"
+                                        (click)="$event.stopPropagation()">                                     
+                                        <button class="w-full text-left px-4 py-3 hover:bg-slate-50"
+                                            (click)="deletePurchase(p, $event)">Eliminar Boleto</button>
+                                        <button class="w-full text-left px-4 py-3 hover:bg-slate-50"
+                                            (click)="activatePurchase(p, false, $event)">Suspender Boleto</button>
+                                        <button class="w-full text-left px-4 py-3 hover:bg-slate-50"
+                                            (click)="activatePurchase(p, true, $event)">Activar Boleto</button>
+                                    </div>
+                                </td>
+
+                            </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+            </div>
+
+            <!-- DETALLE ABAJO -->
+            <div *ngIf="selectedPurchase" class="mt-6 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+
+                <!-- Header -->
+                <div class="flex items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-700">Detalle de Boleto</h3>
+                        <p class="text-sm text-slate-500">
+                            {{ selectedPurchase.name }} · {{ selectedPurchase.creation_date | date:'medium' }}
+                        </p>
+                    </div>
+
+                    <!-- Tabs tipo pastilla (como tu diseño) -->
+                    <div class="flex items-center gap-3 ml-auto">
+                        <button type="button" (click)="setPurchaseDetailTab('detalle')"
+                            class="px-5 py-2 rounded-full border text-sm font-semibold transition-colors duration-200"
+                            [ngClass]="purchaseDetailTab === 'detalle'
+          ? 'bg-[#235000] text-white border-[#235000]'
+          : 'border-slate-300 text-slate-600 hover:bg-[#235000] hover:text-white hover:border-[#235000]'">
+                            Detalle
+                        </button>
+
+                        <button type="button" (click)="setPurchaseDetailTab('pago')"
+                            class="px-5 py-2 rounded-full border text-sm font-semibold transition-colors duration-200"
+                            [ngClass]="purchaseDetailTab === 'pago'
+          ? 'bg-[#235000] text-white border-[#235000]'
+          : 'border-slate-300 text-slate-600 hover:bg-[#235000] hover:text-white hover:border-[#235000]'">
+                            Pago
+                        </button>
+
+                        <button type="button" (click)="setPurchaseDetailTab('vigencia')"
+                            class="px-5 py-2 rounded-full border text-sm font-semibold transition-colors duration-200"
+                            [ngClass]="purchaseDetailTab === 'vigencia'
+          ? 'bg-[#235000] text-white border-[#235000]'
+          : 'border-slate-300 text-slate-600 hover:bg-[#235000] hover:text-white hover:border-[#235000]'">
+                            Vigencia
+                        </button>
+
+                        <button type="button" (click)="setPurchaseDetailTab('debug')"
+                            class="px-5 py-2 rounded-full border text-sm font-semibold transition-colors duration-200"
+                            [ngClass]="purchaseDetailTab === 'debug'
+          ? 'bg-[#235000] text-white border-[#235000]'
+          : 'border-slate-300 text-slate-600 hover:bg-[#235000] hover:text-white hover:border-[#235000]'">
+                            Todos los campos
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ===== TAB: DETALLE ===== -->
+                <div *ngIf="purchaseDetailTab === 'detalle'" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Nombre</label>
+                        <div class="mt-1 text-slate-800 font-semibold">{{ selectedPurchase.name }}</div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Operación</label>
+                        <div class="mt-1 text-slate-800">{{ selectedPurchase.operation_type }}</div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Estatus</label>
+                        <div class="mt-1 text-slate-800">{{ selectedPurchase.status }}</div>
+                    </div>
+
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Ruta</label>
+                        <div class="mt-1 text-slate-800">{{ selectedPurchase.routeName }}</div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Parada</label>
+                        <div class="mt-1 text-slate-800">{{ selectedPurchase.stopName }} ({{
+                            selectedPurchase.stopDescription }})</div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Redondo</label>
+                        <div class="mt-1 text-slate-800">{{ selectedPurchase.round }}</div>
+                    </div>
+
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Producto</label>
+                        <div class="mt-1 text-slate-800">{{ selectedPurchase.product_description }}</div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Categoría</label>
+                        <div class="mt-1 text-slate-800">{{ selectedPurchase.category }}</div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Método</label>
+                        <div class="mt-1 text-slate-800">{{ selectedPurchase.method }}</div>
+                    </div>
+                </div>
+
+                <!-- ===== TAB: PAGO ===== -->
+                <div *ngIf="purchaseDetailTab === 'pago'" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Moneda</label>
+                        <div class="mt-1 text-slate-800">{{ selectedPurchase.currency }}</div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Precio</label>
+                        <div class="mt-1 text-slate-800 font-semibold">
+                            {{ selectedPurchase.price | currency:selectedPurchase.currency:'symbol' }}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Abono</label>
+                        <div class="mt-1 text-slate-800">
+                            {{ selectedPurchase.amountPayment || '-' }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Pago</label>
+                        <div class="mt-1 text-slate-800">{{ selectedPurchase.payment || '-' }}</div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Tipo Pago</label>
+                        <div class="mt-1 text-slate-800">{{ selectedPurchase.typePayment || '-' }}</div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Autorización</label>
+                        <div class="mt-1 text-slate-800">{{ selectedPurchase.authorization }}</div>
+                    </div>
+                </div>
+
+                <!-- ===== TAB: VIGENCIA ===== -->
+                <div *ngIf="purchaseDetailTab === 'vigencia'" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Válido desde</label>
+                        <div class="mt-1 text-slate-800">
+                            {{ selectedPurchase.validFrom.toDate() | date:'medium' }}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Válido hasta</label>
+                        <div class="mt-1 text-slate-800">
+                            {{ selectedPurchase.validTo.toDate() | date:'medium' }}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Real Valid To</label>
+                        <div class="mt-1 text-slate-800">
+                            {{ selectedPurchase.realValidTo ? (selectedPurchase.realValidTo | date:'medium') : '-' }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Promesa</label>
+                        <div class="mt-1 text-slate-800">{{ selectedPurchase.promiseDate | date:'medium' }}</div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Vencimiento</label>
+                        <div class="mt-1 text-slate-800">{{ selectedPurchase.due_date ? (selectedPurchase.due_date |
+                            date:'medium') : '-' }}</div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Conciliado</label>
+                        <div class="mt-1 text-slate-800">{{ selectedPurchase.conciliated ? 'Sí' : 'No' }}</div>
+                    </div>
+                </div>
+
+                <!-- ===== TAB: TODOS LOS CAMPOS (JSON bonito) ===== -->
+                <div *ngIf="purchaseDetailTab === 'debug'"
+                    class="rounded-xl border border-slate-200 bg-slate-50 p-4 overflow-auto">
+                    <pre class="text-xs text-slate-700 m-0">{{ selectedPurchase | json }}</pre>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ====== 3) PANEL MENSAJES ====== -->
+        <div *ngIf="activeSection === 'mensajes'">
+            <div class="rounded-xl border border-slate-200 p-4">
+                <h3 class="text-base font-semibold text-slate-700 mb-2">Mensajes</h3>
+                <p class="text-slate-500">Aquí va el contenido de mensajes del usuario.</p>
+            </div>
+        </div>
+
+        <!-- ====== 4) PANEL HISTORIAL ====== -->
+        <div *ngIf="activeSection === 'historial'">
+            <div class="rounded-xl border border-slate-200 p-4">
+                <h3 class="text-base font-semibold text-slate-700 mb-2">Historial</h3>
+                <p class="text-slate-500">Aquí va el historial del usuario.</p>
+            </div>
+        </div>
+
+        <!-- ====== 5) PANEL TRANSFERENCIAS ====== -->
+        <div *ngIf="activeSection === 'transferencias'">
+            <div class="rounded-xl border border-slate-200 p-4">
+                <h3 class="text-base font-semibold text-slate-700 mb-2">Transferencias</h3>
+                <p class="text-slate-500">Aquí van las transferencias del usuario.</p>
+            </div>
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,2 @@
+number,firstName,lastName,phone,email,validated,employeeId,routeName,round,stop,service,createBoardingPass
+1,John,Doe,555 596 4477,,TRUE,123456,Escobedo,Día,1,Pase anual 2022,TRUE

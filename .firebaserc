@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "andappssystem-c14f2"
+  },
+  "targets": {
+    "andappssystem-c14f2": {
+      "hosting": {
+        "andUsersPortal": [
+          "and-users-portal"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

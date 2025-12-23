@@ -1,0 +1,249 @@
+<div class="app-wrapper  min-h-screen bg-slate-100">
+    <!-- HEADER SUPERIOR -->
+  <div class="app-header flex items-center px-5 py-3 bg-white shadow-sm">
+
+  <!-- IZQUIERDA: LOGO -->
+  <div class="flex items-center gap-2 flex-none">
+    <div class="brand flex items-center gap-2">
+      <div class="brand-icon">
+        <img src="assets/icon/andlogo.png"
+             alt="Logo"
+             class="h-8 w-8 object-contain" />
+      </div>
+      <span class="font-semibold text-slate-700">
+        And Dashboard
+      </span>
+    </div>
+  </div>
+
+  <!-- CENTRO: TÍTULO DE LA PÁGINA -->
+  <div class="flex-1 text-center">
+    <span class="text-lg font-semibold text-slate-700">
+      {{ pageTitle }}
+    </span>
+  </div>
+
+  <!-- DERECHA: NOMBRE + MENÚ -->
+  <div class="right-actions flex items-center gap-3 flex-none">
+    <div class="flex flex-col items-end leading-tight">
+      <span class="font-semibold text-slate-700">
+        {{ user?.displayName }}
+      </span>
+
+      <span class="text-sm text-slate-500">
+        {{ customerName }}
+      </span>
+    </div>
+
+    <div class="relative" #userMenuWrapper>
+      <button
+        class="flex items-center justify-center rounded-full px-3 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300"
+        (click)="toggleUserMenu($event)"
+        type="button">
+        <i class="bi bi-gear"></i>
+      </button>
+
+      <div *ngIf="userMenuOpen"
+           class="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50">
+        <button
+          class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
+          (click)="goToProfile()"
+          type="button">
+          Mi Perfil
+        </button>
+
+        <button
+          class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+          (click)="logout()"
+          type="button">
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+    <div class="app-body flex justify-center px-3 py-1 bg-slate-100">
+
+        <!-- PANEL CENTRAL -->
+        <div class="app-body flex px-1++++ py-3 bg-slate-70 gap-2">
+            <!-- SIDEBAR -->
+            <aside class="w-55 bg-white rounded-xl shadow-sm p-5">
+
+                <!-- PRINCIPAL -->
+                <div class="mb-4">
+
+                    <!-- PRINCIPAL -->
+                    <div class="mb-4">
+
+                        <!-- BOTÓN PRINCIPAL -->
+                        <div class="flex items-center justify-between px-3 py-2 cursor-pointer rounded-lg transition-all"
+                            [ngClass]="{
+            'bg-[rgba(35,80,0,0.45)] text-white shadow-sm': isOpen('principal'),
+            'hover:bg-slate-100 text-slate-700': !isOpen('principal')
+        }" (click)="toggleSection('principal')">
+                            <div class="flex items-center gap-3 font-medium text-[15px]">
+                                <i class="bi bi-grid text-lg"></i>
+                                <span>Principal</span>
+                            </div>
+
+                            <!-- ICONO abierto/cerrado -->
+                            <i class="bi text-lg transition-all"
+                                [ngClass]="isOpen('principal') ? 'bi-chevron-down' : 'bi-chevron-right'"></i>
+                        </div>
+
+                        <!-- SUBMENÚ -->
+                        <div *ngIf="isOpen('principal')" class="mt-2 ml-10 space-y-1">
+
+                            <div class="py-1 text-sm cursor-pointer rounded-md px-2 flex items-center gap-2"
+                                routerLink="/maps" routerLinkActive="bg-[rgba(35,80,0,0.45)] text-white font-semibold">
+                                <i class="bi bi-geo-alt"></i> Maps
+                            </div>
+
+                            <div class="py-1 text-sm cursor-pointer rounded-md px-2 flex items-center gap-2"
+                                routerLink="/users" routerLinkActive="bg-[rgba(35,80,0,0.45)] text-white font-semibold">
+                                <i class="bi bi-people"></i> Users
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- Sección ADMINISTRACIÓN -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between px-3 py-2 cursor-pointer rounded-lg transition-all"
+                        [ngClass]="{
+        'bg-[rgba(35,80,0,0.45)] text-white shadow-sm': isOpen('administracion'),
+        'hover:bg-slate-100 text-slate-700': !isOpen('administracion')
+      }" (click)="toggleSection('administracion')">
+                        <div class="flex items-center gap-3 font-medium text-[15px]">
+                            <i class="bi bi-sliders text-lg"></i>
+                            <span>Administración</span>
+                        </div>
+                        <i class="bi text-lg transition-all"
+                            [ngClass]="isOpen('administracion') ? 'bi-chevron-down' : 'bi-chevron-right'"></i>
+                    </div>
+
+                    <div *ngIf="isOpen('administracion')" class="mt-2 ml-10 space-y-1">
+                        <div class="py-1 text-sm cursor-pointer rounded-md px-2 flex items-center gap-2"
+                            routerLink="/reports" routerLinkActive="bg-[rgba(35,80,0,0.45)] text-white font-semibold"
+                            (click)="closeSidebar()">
+                            <i class="bi bi-file-earmark-bar-graph"></i>
+                            <span>Reportes</span>
+                        </div>
+
+                        <div class="py-1 text-sm cursor-pointer rounded-md px-2 flex items-center gap-2"
+                            routerLink="/attention" routerLinkActive="bg-[rgba(35,80,0,0.45)] text-white font-semibold"
+                            (click)="closeSidebar()">
+                            <i class="bi bi-chat-dots"></i>
+                            <span>Atención</span>
+                        </div>
+
+                        <div class="py-1 text-sm cursor-pointer rounded-md px-2 flex items-center gap-2"
+                            routerLink="/validations"
+                            routerLinkActive="bg-[rgba(35,80,0,0.45)] text-white font-semibold"
+                            (click)="closeSidebar()">
+                            <i class="bi bi-check2-square"></i>
+                            <span>Validaciones</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- LOGISTICA -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between px-3 py-2 cursor-pointer rounded-lg transition-all"
+                        [ngClass]="{
+        'bg-[rgba(35,80,0,0.45)] text-white shadow-sm': isOpen('logistica'),
+        'hover:bg-slate-100 text-slate-700': !isOpen('logistica')
+      }" (click)="toggleSection('logistica')">
+                        <div class="flex items-center gap-3 font-medium text-[15px]">
+                            <i class="bi bi-truck text-lg"></i>
+                            <span>Logística</span>
+                        </div>
+                        <i class="bi text-lg transition-all"
+                            [ngClass]="isOpen('logistica') ? 'bi-chevron-down' : 'bi-chevron-right'"></i>
+                    </div>
+
+                    <div *ngIf="isOpen('logistica')" class="mt-2 ml-10 space-y-1">
+                        <div class="py-1 text-sm cursor-pointer rounded-md px-2 flex items-center gap-2"
+                            routerLink="/live" routerLinkActive="bg-[rgba(35,80,0,0.45)] text-white font-semibold"
+                            (click)="closeSidebar()">
+                            <i class="bi bi-broadcast"></i>
+                            <span>Live</span>
+                        </div>
+
+                        <div class="py-1 text-sm cursor-pointer rounded-md px-2 flex items-center gap-2"
+                            routerLink="/program" routerLinkActive="bg-[rgba(35,80,0,0.45)] text-white font-semibold"
+                            (click)="closeSidebar()">
+                            <i class="bi bi-calendar3"></i>
+                            <span>Programación</span>
+                        </div>
+
+                        <div class="py-1 text-sm cursor-pointer rounded-md px-2 flex items-center gap-2"
+                            routerLink="/assignments"
+                            routerLinkActive="bg-[rgba(35,80,0,0.45)] text-white font-semibold"
+                            (click)="closeSidebar()">
+                            <i class="bi bi-diagram-3"></i>
+                            <span>Asignación</span>
+                        </div>
+
+                        <div class="py-1 text-sm cursor-pointer rounded-md px-2 flex items-center gap-2"
+                            routerLink="/evidence" routerLinkActive="bg-[rgba(35,80,0,0.45)] text-white font-semibold"
+                            (click)="closeSidebar()">
+                            <i class="bi bi-image"></i>
+                            <span>Evidencias</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- CRM (opción sin submenú) -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between px-3 py-2 cursor-pointer rounded-lg transition-all"
+                        routerLink="/crm" routerLinkActive="bg-[rgba(35,80,0,0.45)] text-white shadow-sm"
+                        (click)="closeSidebar()">
+                        <div class="flex items-center gap-3 font-medium text-[15px]">
+                            <i class="bi bi-briefcase text-lg"></i>
+                            <span>CRM</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- SISTEMA -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between px-3 py-2 cursor-pointer rounded-lg transition-all"
+                        [ngClass]="{
+        'bg-[rgba(35,80,0,0.45)] text-white shadow-sm': isOpen('sistema'),
+        'hover:bg-slate-100 text-slate-700': !isOpen('sistema')
+      }" (click)="toggleSection('sistema')">
+                        <div class="flex items-center gap-3 font-medium text-[15px]">
+                            <i class="bi bi-gear text-lg"></i>
+                            <span>Sistema</span>
+                        </div>
+                        <i class="bi text-lg transition-all"
+                            [ngClass]="isOpen('sistema') ? 'bi-chevron-down' : 'bi-chevron-right'"></i>
+                    </div>
+
+                    <div *ngIf="isOpen('sistema')" class="mt-2 ml-10 space-y-1">
+                        <div class="py-1 text-sm cursor-pointer rounded-md px-2 flex items-center gap-2"
+                            routerLink="/division" routerLinkActive="bg-[rgba(35,80,0,0.45)] text-white font-semibold"
+                            (click)="closeSidebar()">
+                            <i class="bi bi-diagram-2"></i>
+                            <span>División</span>
+                        </div>
+
+                        <div class="py-1 text-sm cursor-pointer rounded-md px-2 flex items-center gap-2"
+                            routerLink="/operation" routerLinkActive="bg-[rgba(35,80,0,0.45)] text-white font-semibold"
+                            (click)="closeSidebar()">
+                            <i class="bi bi-gear-wide-connected"></i>
+                            <span>Operación</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- CONTENIDO -->
+            <main class="flex-1 px-3 py-1">
+                <div class="bg-white rounded-xl shadow-sm p-4 min-h-[600px]">
+                    <router-outlet></router-outlet>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>

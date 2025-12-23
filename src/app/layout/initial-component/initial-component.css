@@ -1,0 +1,12 @@
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.content-wrapper {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+  /* el fondo ya lo damos con Tailwind: bg-slate-50 */
+}

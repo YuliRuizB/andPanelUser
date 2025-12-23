@@ -1,3 +1,204 @@
 /* You can add global styles to this file, and also import other style files */
-
+@import './assets/css/toastr.css';
 @import "tailwindcss";
+.btn-primary {
+  width: 100%;
+  margin-top: 0.5rem;
+  display: inline-flex;
+  justify-content: center;
+  padding: 0.625rem 1rem;
+
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+
+  /* 👉 color base del botón */
+  background-color: #235000;
+
+  border: none;
+  cursor: pointer;
+  transition: background-color 150ms ease, box-shadow 150ms ease;
+}
+
+/* Estilo GLOBAL para todos los enlaces <a> */
+a {
+  color: #235000;               /* color verde base */
+  font-weight: 500;             /* igual que font-medium */
+  text-decoration: none;        /* opcional */
+  transition: color 150ms ease;
+}
+
+/* Hover más oscuro */
+a:hover {
+  color: #1c3f00;               /* tono más profundo */
+}
+
+/* Enlaces dentro de textos pequeños (opcional) */
+a:active {
+  color: #1a3800;
+}
+
+
+body,
+html {
+  margin: 0;
+  padding: 0;
+}
+
+.app-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER SUPERIOR */
+.app-header {
+  height: 60px;
+  border-bottom: 1px solid #e5e5e5;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  z-index: 1030;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.brand-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #0d6efd20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.right-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #dee2e6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+/* BODY */
+.app-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  background: #f5f5f9;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 240px;
+  background: #ffffff;
+  border-right: 1px solid #e5e5e5;
+  padding: 1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-title {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: #868e96;
+  margin-bottom: 0.75rem;
+  padding: 0 0.5rem;
+  letter-spacing: 0.08em;
+}
+
+.nav-link-custom {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  color: #495057;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s, transform 0.05s;
+  cursor: pointer;
+}
+
+.nav-link-custom i {
+  font-size: 1.1rem;
+}
+
+.nav-link-custom:hover {
+  background: #f1f3f5;
+  text-decoration: none;
+  transform: translateX(1px);
+}
+
+.nav-link-custom.active {
+  background: #0d6efd;
+  color: #ffffff;
+}
+
+.nav-link-custom.active:hover {
+  background: #0b5ed7;
+}
+
+/* CONTENIDO PRINCIPAL */
+.content-wrapper {
+  flex: 1;
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+}
+
+/* Cards de ejemplo */
+.card {
+  border-radius: 0.75rem;
+  border: none;
+  box-shadow: 0 0.125rem 0.4rem rgba(15, 23, 42, 0.08);
+}
+
+/* Responsive: sidebar móvil */
+.sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 992px) {
+  .sidebar {
+    position: fixed;
+    z-index: 1040;
+    left: -260px;
+    top: 60px;
+    height: calc(100vh - 60px);
+    transition: left 0.2s ease-in-out;
+  }
+
+  .sidebar.show {
+    left: 0;
+  }
+
+  .sidebar-backdrop.show {
+    display: block;
+    position: fixed;
+    z-index: 1035;
+    inset: 60px 0 0 0;
+    background: rgba(0, 0, 0, 0.35);
+  }
+}

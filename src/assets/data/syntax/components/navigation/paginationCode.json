@@ -1,0 +1,12 @@
+{
+    "paginationBasicCode" : "<nz-pagination [nzPageIndex]=\"1\" [nzTotal]=\"50\"><\/nz-pagination>",
+    "paginationMoreCode" : "<nz-pagination [nzPageIndex]=\"1\" [nzTotal]=\"500\"><\/nz-pagination>",
+    "paginationChangerCode" : "<nz-pagination [nzPageIndex]=\"3\" [nzTotal]=\"500\" nzShowSizeChanger [nzPageSize]=\"10\"><\/nz-pagination>",
+    "paginationJumperCode" : "<nz-pagination [nzPageIndex]=\"2\" [nzTotal]=\"500\" nzShowQuickJumper><\/nz-pagination>",
+    "paginationMiniSizeCode" : "import { Component } from '@angular\/core';\r\n\r\n@Component({\r\n    selector: 'nz-demo-pagination-mini',\r\n    template: `\r\n        <nz-pagination [(nzPageIndex)]=\"current\" [nzTotal]=\"50\" [nzSize]=\"'small'\"><\/nz-pagination>\r\n        <br>\r\n        <nz-pagination [(nzPageIndex)]=\"current\" [nzTotal]=\"50\" [nzSize]=\"'small'\" nzShowSizeChanger nzShowQuickJumper><\/nz-pagination>\r\n        <br>\r\n        <nz-pagination [(nzPageIndex)]=\"current\" [nzTotal]=\"50\" [nzSize]=\"'small'\" [nzShowTotal]=\"totalTemplate\"><\/nz-pagination>\r\n        <ng-template #totalTemplate let-total>Total {{total}} items<\/ng-template>\r\n    `,\r\n})\r\n\r\nexport class NzDemoPaginationMiniComponent {\r\n    current = 1;\r\n}",
+    "paginationSimpleCode" : "<nz-pagination [nzPageIndex]=\"2\" [nzTotal]=\"50\" nzSimple><\/nz-pagination>",
+    "paginationPageIndexCode" : "<nz-pagination [nzPageIndex]=\"3\" [nzTotal]=\"50\"><\/nz-pagination>",
+    "paginationTotalNumberCode" : "<nz-pagination [nzPageIndex]=\"1\" [nzTotal]=\"85\" [nzPageSize]=\"20\" [nzShowTotal]=\"totalTemplate\"><\/nz-pagination>\r\n<br>\r\n<nz-pagination [nzPageIndex]=\"1\" [nzTotal]=\"85\" [nzPageSize]=\"20\" [nzShowTotal]=\"rangeTemplate\"><\/nz-pagination>\r\n<ng-template #totalTemplate let-total>\r\n    Total {{total}} items\r\n<\/ng-template>\r\n<ng-template #rangeTemplate let-range=\"range\" let-total>\r\n    {{range[0]}}-{{range[1]}} of {{total}} items\r\n<\/ng-template>",
+    "paginationPrevNextCode" : "<nz-pagination [nzPageIndex]=\"1\" [nzTotal]=\"500\" [nzItemRender]=\"renderItemTemplate\"><\/nz-pagination>\r\n<ng-template #renderItemTemplate let-type let-page=\"page\">\r\n    <a *ngIf=\"type==='pre'\">Previous<\/a>\r\n    <a *ngIf=\"type==='next'\">Next<\/a>\r\n    <a *ngIf=\"type==='page'\">{{page}}<\/a>\r\n<\/ng-template>",
+    "paginationAPICode" : "<nz-pagination [nzPageIndex]=\"1\" [nzTotal]=\"50\"><\/nz-pagination>"
+}

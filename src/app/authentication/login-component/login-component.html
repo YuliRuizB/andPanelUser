@@ -1,0 +1,108 @@
+<div>
+    <meta charset="utf-8" />
+    <title>Login | And</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</div>
+
+<div class="min-h-screen bg-slate-100 flex items-center justify-center">
+    <div class="w-full max-w-5xl mx-4 bg-white shadow-xl rounded-2xl overflow-hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2">
+            <!-- LADO IZQUIERDO CON IMAGEN -->
+            <div class="relative bg-cover bg-center bg-no-repeat w-full h-full min-h-[650px]"
+                style="background-image: url('assets/PortalInicio.png');">
+            </div>
+
+            <!-- Lado DERECHO (FORMULARIO) -->
+            <div class="p-8 md:p-10">
+                <h3 class="text-2xl font-bold text-slate-800 mb-2 text-center">
+                    Iniciar sesión
+                </h3>
+                <p class="text-sm text-slate-500 mb-8">
+                    Ingresa tu correo y contraseña para continuar.
+                </p>
+
+                <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
+
+                    <!-- Email -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">
+                            Correo electrónico
+                        </label>
+                        <input type="email" formControlName="email"
+                            class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500"
+                            placeholder="tucorreo@ejemplo.com" />
+
+                        <!-- Error -->
+                        <p class="text-red-600 text-xs mt-1"
+                            *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid">
+                            Ingresa un correo válido.
+                        </p>
+                    </div>
+
+                    <!-- Password -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">
+                            Contraseña
+                        </label>
+
+                        <div class="relative">
+                            <input [type]="showPassword ? 'text' : 'password'" formControlName="password"
+                                class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-500 pr-10"
+                                placeholder="••••••••" />
+
+                            <!-- Botón para mostrar/ocultar contraseña -->
+                            <button type="button" (click)="togglePassword()"
+                                class="absolute inset-y-0 right-3 flex items-center text-slate-500 hover:text-slate-700">
+                                <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 
+           4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+
+                                <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 
+           0-8.268-2.943-9.542-7a9.97 9.97 0 012.55-4.383M6.18 
+           6.18A9.967 9.967 0 0112 5c4.478 0 8.268 2.943 
+           9.542 7a9.965 9.965 0 01-4.043 5.225M6.18 
+           6.18L3 3m3.18 3.18L12 12m0 0l8.82 8.82m-8.82-8.82l6.364 
+           6.364" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Error -->
+                        <p class="text-red-600 text-xs mt-1"
+                            *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
+                            La contraseña debe tener al menos 6 caracteres.
+                        </p>
+                    </div>
+
+                    <!-- Remember + forgot -->
+                    <div class="flex items-center justify-between text-sm">
+                        <label class="inline-flex items-center gap-2 text-slate-600">
+                            <input type="checkbox" formControlName="remember"
+                                class="rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                            <span>Recordarme</span>
+                        </label>
+
+                        <a href="#" class="font-medium">
+                            ¿Olvidaste tu contraseña?
+                        </a>
+                    </div>
+
+                    <!-- Botón login -->
+                    <button type="submit" class="btn-primary">
+                        Iniciar sesión
+                    </button>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>

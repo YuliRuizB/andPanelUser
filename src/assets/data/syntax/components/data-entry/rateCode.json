@@ -1,0 +1,8 @@
+{
+    "rateBasicCode" : "<nz-rate [ngModel]=\"0\"><\/nz-rate>",
+    "rateHalfStarCode" : "<nz-rate [ngModel]=\"2.5\" nzAllowHalf><\/nz-rate>",
+    "rateShowCopyCode" : "import { Component } from '@angular\/core';\r\n\r\n@Component({\r\n    selector: 'nz-demo-rate-text',\r\n    template: `\r\n        <nz-rate [(ngModel)]=\"value\" nzAllowHalf><\/nz-rate>\r\n        <span *ngIf=\"value\" class=\"ant-rate-text\">{{ value }} stars<\/span>\r\n    `\r\n})\r\nexport class NzDemoRateTextComponent {\r\n    value = 3;\r\n}",
+    "rateReadOnlyCode" : "<nz-rate [ngModel]=\"2\" nzDisabled><\/nz-rate>",
+    "rateClearStarCode" : "import { Component } from '@angular\/core';\r\n\r\n@Component({\r\n    selector: 'nz-demo-rate-clear',\r\n    template: `\r\n        <nz-rate [(ngModel)]=\"value\" nzAllowHalf><\/nz-rate>\r\n        <span class=\"ant-rate-text\">allowClear: true<\/span>\r\n        <br>\r\n        <nz-rate [(ngModel)]=\"value\" nzAllowHalf [nzAllowClear]=\"false\"><\/nz-rate>\r\n        <span class=\"ant-rate-text\">allowClear: false<\/span>\r\n    `\r\n})\r\nexport class NzDemoRateClearComponent {\r\n    value = 0;\r\n}",
+    "rateOtherCharacterCode" : "<nz-rate [ngModel]=\"0\" nzAllowHalf [nzCharacter]=\"characterIcon\"><\/nz-rate>\r\n<nz-rate [ngModel]=\"0\" nzAllowHalf class=\"large\" [nzCharacter]=\"characterEnLetter\"><\/nz-rate>\r\n<nz-rate [ngModel]=\"0\" nzAllowHalf [nzCharacter]=\"characterZhLetter\"><\/nz-rate>\r\n\r\n<ng-template #characterIcon><i nz-icon type=\"heart\"><\/i><\/ng-template>\r\n<ng-template #characterZhLetter>\u597D<\/ng-template>\r\n<ng-template #characterEnLetter>A<\/ng-template>"
+}
