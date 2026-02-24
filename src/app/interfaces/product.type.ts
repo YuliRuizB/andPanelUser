@@ -1,24 +1,52 @@
 //import * as firebase from 'firebase/app';
 import { Timestamp } from 'firebase/firestore';
 
+
 export interface Product {
-    id: string;
-    active: boolean;
-    category: string;
-    date_created: Timestamp;
-    description: string;
-    type: string;
-    name: string;
-    price: number;
-    validFrom: Timestamp;
-    validTo: Timestamp;
-    isTaskIn: boolean;
-    isTaskOut: boolean;
-    timesSold?: number;
-    member? : string;
-    avatar?: string;
-    imageUrl?:string;
+  id: string;
+  customerId?: string;
+  active: boolean;
+  disable?: boolean;
+  name: string;
+   description: string;
+  category: string;
+  type: string;
+  transportType?: string;
+  price: number;
+  amountTrips?: number;
+  validFrom: Timestamp;
+  validTo: Timestamp;
+  rangeDatePicker?: [Timestamp, Timestamp] | Timestamp[];
+  isTaskIn: boolean;
+  isTaskOut: boolean;
+  isCalculate?: boolean;
+  sits?: number;
+  timesSold?: number;
+  frequencies?: any | null;
+  rangeWeeks?: any;
+  weeks?: any[];
+  date_created?: Timestamp;
+  lastUpdatedAt?: Timestamp;
+  imageUrl?: string;  
+  member?: string;
+  avatar?: string;
+  isParcialPayment?: boolean;
+  partialPaymentAmount?: number;
+  partialPaymentsCount?: number;
 }
+
+export interface PartialPayment {
+  id: string;
+  active: boolean;
+  amount: number;
+  startsAt: Timestamp;
+  endsAt: Timestamp;
+  createdAt?: Timestamp;
+  idBoardingPass?: string;
+  uidUser?: string;
+  paymentNumber?: number;
+}
+
 
 export const columnDefs = [
     { headerName: 'Id', field: 'uid', hide: true, sortable: true, filter: 'agTextColumnFilter' },
@@ -35,3 +63,15 @@ export const columnDefs = [
 ];
 
 export const rowGroupPanelShow = 'always';
+
+
+export interface PartialPaymentOption {
+  id: string;
+  active?: boolean;
+  label: string;        // "18 febrero 2026 - 31 julio 2026 // $1000"
+  amount: number;
+  startsAt: Date;
+  endsAt: Date;
+  paymentNumber?: number; // opcional, para orden
+}
+

@@ -1,0 +1,368 @@
+<div class="space-y-4">
+
+    <!-- Header -->
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <h2 class="text-lg font-semibold text-slate-800">Pases de Abordar Activos</h2>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button type="button"
+                class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                (click)="reload()" [disabled]="loading">
+                {{ loading ? 'Cargando…' : 'Recargar' }}
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabs + Search -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-4">
+        <div class="flex flex-wrap items-center gap-3 justify-between">
+
+            <!-- Tabs -->
+            <div class="flex items-center gap-2">
+                <button type="button"
+                    class="px-5 py-2 rounded-full border text-sm font-semibold transition-colors duration-200"
+                    [ngClass]="tab === 'activos'
+            ? 'bg-[#235000] text-white border-[#235000]'
+            : 'border-slate-300 text-slate-600 hover:bg-[#235000] hover:text-white hover:border-[#235000]'"
+                    (click)="setTab('activos')">
+                    Todos (Activos) ({{ activeFiltered.length }})
+                </button>
+
+                <button type="button"
+                    class="px-5 py-2 rounded-full border text-sm font-semibold transition-colors duration-200"
+                    [ngClass]="tab === 'parcialidades'
+            ? 'bg-[#235000] text-white border-[#235000]'
+            : 'border-slate-300 text-slate-600 hover:bg-[#235000] hover:text-white hover:border-[#235000]'"
+                    (click)="setTab('parcialidades')">
+                    Parcialidades ({{ partialFiltered.length }})
+                </button>
+            </div>
+
+            <!-- Search -->
+            <div class="w-full md:w-[420px]">
+                <input type="text"
+                    class="w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    placeholder="Buscar por nombre, ruta o estatus…" [formControl]="filterForm.controls.q" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="errorMsg" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        {{ errorMsg }}
+    </div>
+
+    <!-- Tabla -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+
+                <thead class="text-white" style="background-color:#235000;">
+                    <tr class="text-left">
+                        <th class="px-6 py-3 font-semibold text-right">Nombre</th>
+                        <th class="px-6 py-3 font-semibold text-right">Matricula</th>
+                        <th class="px-6 py-3 font-semibold">Pase</th>
+                        <th class="px-6 py-3 font-semibold">Ruta</th>
+                        <th class="px-6 py-3 font-semibold">Vigencia</th>
+                        <th class="px-6 py-3 font-semibold">Estatus</th>
+                        <th *ngIf="tab === 'parcialidades'" class="px-6 py-3 font-semibold text-right">Monto</th>
+                        <th *ngIf="tab === 'parcialidades'" class="px-6 py-3 font-semibold text-right">Abono</th>                       
+                        <th class="px-6 py-3 font-semibold text-right">...</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-slate-200">
+
+                    <!-- LOADING -->
+                    <tr *ngIf="loading">
+                        <td [attr.colspan]="tab === 'parcialidades' ? 7 : 6"
+                            class="px-6 py-8 text-center text-slate-500">
+                            Cargando pases...
+                        </td>
+                    </tr>
+
+                    <!-- EMPTY -->
+                    <tr *ngIf="!loading && tab === 'activos' && activeFiltered.length === 0">
+                        <td colspan="6" class="px-6 py-8 text-center text-slate-500">
+                            No hay pases activos.
+                        </td>
+                    </tr>
+
+                    <tr *ngIf="!loading && tab === 'parcialidades' && partialFiltered.length === 0">
+                        <td colspan="7" class="px-6 py-8 text-center text-slate-500">
+                            No hay pases activos con parcialidades.
+                        </td>
+                    </tr>
+
+                    <!-- ROWS: ACTIVOS -->
+                    <ng-container *ngIf="!loading && tab === 'activos'">
+                        <tr *ngFor="let p of pagedActivos" class="hover:bg-slate-50 transition">
+                            <td class="px-6 py-4 text-slate-700">
+                                {{ getUserDisplayName(p) }}
+                            </td>
+
+                            <td class="px-6 py-4 text-slate-700 text-right">
+                                {{ getUserStudentId(p) }}
+                            </td>
+                            <td class="px-6 py-4">
+                                <span
+                                    class="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-blue-100 text-blue-700 w-fit">
+                                    {{ p.name }}
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4 text-slate-700">
+                                {{ p.routeName }}
+                            </td>
+
+                            <td class="px-6 py-4 text-slate-700 whitespace-nowrap">
+                                <span [ngClass]="getValidToClass(p)">
+                                    {{ toJsDate(p.validTo) | date:'dd/MM/yyyy' }}
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 rounded text-xs font-semibold"
+                                    [ngClass]="statusBadgeClass(p.status)">
+                                    {{ statusLabel(p) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right font-semibold text-slate-700">
+                            </td>
+                        </tr>
+                    </ng-container>
+
+                    <!-- ROWS: PARCIALIDADES -->
+                    <ng-container *ngIf="!loading && tab === 'parcialidades'">
+                        <tr *ngFor="let p of pagedParciales" class="hover:bg-slate-50 transition">
+                            <td class="px-6 py-4 text-slate-700">
+                                {{ getUserDisplayName(p) }}
+                            </td>
+
+                            <td class="px-6 py-4 text-slate-700 text-right">
+                                {{ getUserStudentId(p) }}
+                            </td>
+                            <td class="px-6 py-4">
+                                <span
+                                    class="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-blue-100 text-blue-700 w-fit">
+                                    {{ p.name }}
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4 text-slate-700">
+                                {{ p.routeName }}
+                            </td>
+
+                            <td class="px-6 py-4 text-slate-700 whitespace-nowrap">
+                                <span [ngClass]="getValidToClass(p)">
+                                    {{ toJsDate(p.validTo) | date:'dd/MM/yyyy' }}
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 rounded text-xs font-semibold"
+                                    [ngClass]="statusBadgeClass(p.status)">
+                                    {{ statusLabel(p) }}
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4 text-right font-semibold text-slate-700">
+                                {{ p.price | currency:p.currency:'symbol' }}
+                            </td>
+
+                            <td class="px-6 py-4 text-right font-semibold text-slate-700">
+                                {{ amountPaymentAsNumber(p) | currency:p.currency:'symbol' }}
+                            </td>
+                         
+                            <td class="px-6 py-4 text-right">
+                                <button type="button" class="h-9 w-9 inline-flex items-center justify-center rounded-xl
+           bg-slate-900 text-white hover:bg-slate-800 transition" (click)="toggleRowMenu(p)">
+                                    ⋯
+                                </button>
+
+                                <!-- MENU -->
+                                <div *ngIf="openedRowMenu === p.idBoardingPass" class="absolute right-6 mt-2 w-48 bg-white border border-slate-200
+              rounded-xl shadow-lg z-40 overflow-hidden">
+
+                                    <button class="w-full text-left px-4 py-2 hover:bg-slate-50 text-sm"
+                                        (click)="openAddPartialPaymentFromReport(p)">
+                                        ➕ Agregar pago
+                                    </button>
+
+                                    <button class="w-full text-left px-4 py-2 hover:bg-slate-50 text-sm"
+                                        (click)="openMessageUser(p)">
+                                        💬 Mensaje
+                                    </button>
+
+                                    <button class="w-full text-left px-4 py-2 hover:bg-slate-50 text-sm"
+                                        (click)="openUserInfo(p)">
+                                        👤 Información Usuario
+                                    </button>
+
+                                </div>
+                            </td>
+
+                        </tr>
+                    </ng-container>
+
+                </tbody>
+            </table>
+        </div>
+        <!-- PAGINACIÓN -->
+        <div class="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-white">
+            <div class="text-sm text-slate-600">
+                Mostrando
+                <span class="font-semibold">{{ fromIndex }}</span>
+                -
+                <span class="font-semibold">{{ toIndex }}</span>
+                de
+                <span class="font-semibold">{{ totalItems }}</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button class="px-3 py-1 rounded-lg border border-slate-300 text-slate-700 disabled:opacity-50"
+                    (click)="prevPage()"
+                    [disabled]="(tab === 'activos' ? currentPageActivos : currentPageParciales) === 1" type="button">
+                    ‹
+                </button>
+
+                <span class="text-sm font-semibold text-slate-700">
+                    Página
+                    {{ tab === 'activos' ? currentPageActivos : currentPageParciales }}
+                    /
+                    {{ tab === 'activos' ? totalPagesActivos : totalPagesParciales }}
+                </span>
+
+                <button class="px-3 py-1 rounded-lg border border-slate-300 text-slate-700 disabled:opacity-50"
+                    (click)="nextPage()" [disabled]="(tab === 'activos'
+        ? currentPageActivos >= totalPagesActivos
+        : currentPageParciales >= totalPagesParciales)" type="button">
+                    ›
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+<!-- ========== MODAL: Agregar Pago ========== -->
+<div *ngIf="showAddPartialPaymentModal" class="fixed inset-0 z-50">
+    <!-- overlay -->
+    <div class="absolute inset-0 bg-black/40" (click)="cancelAddPartialPaymentModal()"></div>
+
+    <!-- modal -->
+    <div class="relative min-h-full flex items-center justify-center p-4">
+        <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+
+            <!-- header -->
+            <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/60">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <div class="text-base font-semibold text-slate-900">Agregar pago parcial</div>
+                        <div class="text-xs text-slate-500 mt-1">
+                            Selecciona el pago pendiente para generarlo en este pase.
+                        </div>
+                    </div>
+
+                    <button type="button"
+                        class="h-9 w-9 grid place-items-center rounded-xl hover:bg-slate-100 text-slate-600"
+                        (click)="cancelAddPartialPaymentModal()">
+                        ✕
+                    </button>
+                </div>
+            </div>
+
+            <!-- body -->
+            <div class="px-6 py-5">
+
+                <!-- estado -->
+                <div class="flex items-center justify-between gap-3 mb-4">
+                    <div class="text-sm text-slate-700">
+                        <span class="font-semibold">{{ partialPayments.length }}</span> generado(s) ·
+                        <span class="font-semibold">{{ selectedPurchase?.partialPaymentsCount ?? 0 }}</span> total
+                    </div>
+
+                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border"
+                        [ngClass]="availablePartialPayments.length
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                  : 'bg-slate-100 text-slate-600 border-slate-200'">
+                        {{ availablePartialPayments.length ? 'Disponible' : 'Sin pendientes' }}
+                    </span>
+                </div>
+
+                <!-- si NO hay disponibles -->
+                <div *ngIf="!availablePartialPayments.length"
+                    class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                    No hay pagos parciales pendientes para generar en este pase.
+                </div>
+
+                <!-- si SÍ hay disponibles -->
+                <div *ngIf="availablePartialPayments.length" class="space-y-3">
+
+                    <!-- selector -->
+                    <div class="rounded-xl border border-slate-200 bg-white p-4">
+                        <label class="text-xs font-medium text-slate-500">Pago a generar</label>
+
+                        <select class="mt-2 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
+                           focus:outline-none focus:ring-2 focus:ring-[#235000]/30 focus:border-[#235000]/60"
+                            [(ngModel)]="selectedAvailablePaymentId">
+                            <option value="">Selecciona un pago pendiente…</option>
+
+                            <option *ngFor="let p of availablePartialPayments" [value]="p.id">
+                                Pago #{{ p.paymentNumber }} ·
+                                {{ p.startsAt.toDate() | date:'dd/MM/yyyy' }} - {{ p.endsAt.toDate() | date:'dd/MM/yyyy'
+                                }} ·
+                                {{ p.amount | currency:(selectedPurchase?.currency || 'MXN'):'symbol' }}
+                            </option>
+
+                        </select>
+
+                        <div class="mt-2 text-xs text-slate-500">
+                            Solo aparecen los pagos que aún no han sido generados.
+                        </div>
+                    </div>
+
+                    <!-- preview (opcional, se ve pro) -->
+                    <div *ngIf="selectedAvailablePaymentId"
+                        class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+                        <ng-container *ngFor="let p of availablePartialPayments">
+                            <div *ngIf="p.id === selectedAvailablePaymentId" class="flex flex-wrap items-center gap-2">
+                                <span
+                                    class="inline-flex items-center rounded-full bg-slate-900 text-white px-2.5 py-1 text-xs font-semibold">
+                                    Pago #{{ p.paymentNumber }}
+                                </span>
+                                <span class="text-slate-700">
+                                    {{ p.startsAt.toDate() | date:'dd/MM/yyyy' }} -
+                                    {{ p.endsAt.toDate() | date:'dd/MM/yyyy' }}
+                                </span>
+                                <span class="font-semibold text-slate-900">
+                                    {{ p.amount | currency:(selectedPurchase?.currency || 'MXN'):'symbol' }}
+                                </span>
+                            </div>
+                        </ng-container>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- footer -->
+            <div class="px-6 py-4 border-t border-slate-200 bg-white flex items-center justify-end gap-2">
+                <button type="button"
+                    class="px-4 py-2 rounded-xl border border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
+                    (click)="cancelAddPartialPaymentModal()">
+                    Cancelar
+                </button>
+
+                <button type="button"
+                    class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                    [disabled]="!availablePartialPayments.length || !selectedAvailablePaymentId"
+                    (click)="confirmAddPartialPaymentModal()">
+                    Aceptar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>

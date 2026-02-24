@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, ElementRef, HostListener, inject, NgZone, ViewChild } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { CommonEngine } from '@angular/ssr/node';
 import { AuthenticationService } from '../../services/authentication.service';
 import { filter, take } from 'rxjs';
 
@@ -115,12 +114,13 @@ export class InitialComponent {
     const url = this.router.url.split('?')[0];
 
     const titles: any = {
-      '/home': 'Inicio',
+      '/home': 'Administración',
       '/maps': 'Mapas',
       '/users': 'Usuarios',
       '/reports': 'Reportes',
       '/attention': 'Atención a Clientes',
       '/validations': 'Validaciones',
+      '/boardingPass': 'Pases de Abordar',
       '/live': 'En Vivo',
       '/program': 'Programación',
       '/assignments': 'Asignaciones',
@@ -128,7 +128,9 @@ export class InitialComponent {
       '/crm': 'CRM',
       '/division': 'Divisiones',
       '/operation': 'Operaciones del Sistema',
-      '/profile': 'Mi Perfil'
+      '/profile': 'Mi Perfil',
+      '/products': 'Productos',
+      '/promotions': 'Promociones',
     };
 
     this.pageTitle = titles[url] || '';

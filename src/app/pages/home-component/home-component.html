@@ -1,1 +1,203 @@
-<p>home-component works!</p>
+<div class="p-6 space-y-6">
+  <!-- ROW 1 -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center gap-4">
+      <div class="h-12 w-12 rounded-full bg-blue-500 flex items-center justify-center text-white">
+        <!-- user icon -->
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      </div>
+      <div class="min-w-0">
+        <p class="text-slate-500 text-sm">Usuarios</p>
+        <p class="text-2xl font-semibold text-slate-900">{{totalUsers}}</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center gap-4">
+      <div class="h-12 w-12 rounded-full bg-red-500 flex items-center justify-center text-white">
+        <!-- plus/user -->
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M18 9a3 3 0 11-6 0 3 3 0 016 0zM6 20a6 6 0 0112 0M12 11v6m3-3H9" />
+        </svg>
+      </div>
+      <div class="min-w-0">
+        <p class="text-slate-500 text-sm">Proveedores</p>
+        <p class="text-2xl font-semibold text-slate-900">{{totVendor}}</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center gap-4">
+      <div class="h-12 w-12 rounded-full bg-amber-500 flex items-center justify-center text-white">
+        <!-- route icon -->
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M7 7h.01M17 17h.01M7 7a4 4 0 017.9 1H17a4 4 0 010 8h-2.1A4 4 0 017 15V7z" />
+        </svg>
+      </div>
+      <div class="min-w-0">
+        <p class="text-slate-500 text-sm">Rutas Totales</p>
+        <p class="text-2xl font-semibold text-slate-900">{{totRoutes}}</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center gap-4">
+      <div class="h-12 w-12 rounded-full bg-emerald-500 flex items-center justify-center text-white">
+        <!-- live pulse -->
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 12h4l2-5 4 10 2-5h6" />
+        </svg>
+      </div>
+      <div class="min-w-0">
+        <p class="text-slate-500 text-sm">Rutas En Vivo</p>
+        <p class="text-2xl font-semibold text-slate-900">{{totRoutesLive}}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 2 -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center gap-4">
+      <div class="h-12 w-12 rounded-full bg-indigo-500 flex items-center justify-center text-white">
+        <!-- steering wheel -->
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 3a9 9 0 100 18 9 9 0 000-18zm0 0v6m0 6a3 3 0 110-6 3 3 0 010 6z" />
+        </svg>
+      </div>
+      <div class="min-w-0">
+        <p class="text-slate-500 text-sm">Total Conductores</p>
+        <p class="text-2xl font-semibold text-slate-900">{{totDrivers}}</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center gap-4">
+      <div class="h-12 w-12 rounded-full bg-fuchsia-500 flex items-center justify-center text-white">
+        <!-- ticket -->
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 5h6a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H9a2 2 0 01-2-2v-2a2 2 0 100-4V7a2 2 0 012-2z" />
+        </svg>
+      </div>
+      <div class="min-w-0">
+        <p class="text-slate-500 text-sm">Pases Activos</p>
+        <p class="text-2xl font-semibold text-slate-900">{{activePasses}}</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center gap-4">
+      <div class="h-12 w-12 rounded-full bg-orange-500 flex items-center justify-center text-white">
+        <!-- box -->
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-14L4 7m8 4L4 7v10l8 4" />
+        </svg>
+      </div>
+      <div class="min-w-0">
+        <p class="text-slate-500 text-sm">Productos</p>
+        <p class="text-2xl font-semibold text-slate-900">{{totalProducts}}</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center gap-4">
+      <div class="h-12 w-12 rounded-full bg-teal-500 flex items-center justify-center text-white">
+        <!-- tag -->
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M7 7h.01M3 11l8-8h6l4 4v6l-8 8L3 11z" />
+        </svg>
+      </div>
+      <div class="min-w-0">
+        <p class="text-slate-500 text-sm">Promociones</p>
+        <p class="text-2xl font-semibold text-slate-900">{{promotions}}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+     <div class="flex items-center gap-3">
+    <h2 class="text-lg font-semibold text-slate-900">Actividad Nuevos</h2>
+
+    <!-- selector de año -->
+    <div class="flex items-center gap-2 text-sm">
+      <button
+        class="underline transition"
+         [disabled]="isLoadingYear"
+        [class.text-blue-600]="selectedYear === 2025"
+        [class.text-slate-400]="selectedYear !== 2025"
+        (click)="changeYear(2025)">
+        2025
+      </button>
+
+      <span class="text-slate-400">|</span>
+
+      <button
+        class="underline transition"
+         [disabled]="isLoadingYear"
+        [class.text-blue-600]="selectedYear === 2026"
+        [class.text-slate-400]="selectedYear !== 2026"
+        (click)="changeYear(2026)">
+        2026
+      </button>
+    </div>
+      <div class="text-sm text-slate-500">Meses vs Usuarios</div>
+  </div>
+
+    <div class="w-full overflow-x-auto">
+      <div class="min-w-[780px]">
+        <svg [attr.viewBox]="'0 0 ' + chartW + ' ' + chartH" class="w-full h-[280px]">
+          <!-- grid horizontal -->
+          <g>
+            <ng-container *ngFor="let y of gridLines">
+              <line
+                x1="60"
+                [attr.y1]="y"
+                [attr.x2]="chartW - 20"
+                [attr.y2]="y"
+                stroke="#e2e8f0"
+                stroke-width="1"
+              />
+            </ng-container>
+          </g>
+
+          <!-- y-axis labels -->
+          <g class="text-xs" fill="#64748b">
+            <ng-container *ngFor="let t of yTicks">
+              <text x="10" [attr.y]="t.y + 4">{{ t.label }}</text>
+            </ng-container>
+          </g>
+
+          <!-- x-axis labels -->
+          <g class="text-xs" fill="#64748b">
+            <ng-container *ngFor="let m of xTicks">
+              <text [attr.x]="m.x - 10" [attr.y]="chartH - 10">{{ m.label }}</text>
+            </ng-container>
+          </g>
+
+          <!-- axes -->
+          <line x1="60" y1="20" x2="60" [attr.y2]="chartH - 40" stroke="#94a3b8" stroke-width="1" />
+          <line x1="60" [attr.y1]="chartH - 40" [attr.x2]="chartW - 20" [attr.y2]="chartH - 40" stroke="#94a3b8" stroke-width="1" />
+
+          <!-- line -->
+          <polyline
+            [attr.points]="polylinePoints"
+            fill="none"
+            stroke="#2563eb"
+            stroke-width="3"
+            stroke-linejoin="round"
+            stroke-linecap="round"
+          ></polyline>
+
+          <!-- dots -->
+          <ng-container *ngFor="let p of points">
+            <circle [attr.cx]="p.x" [attr.cy]="p.y" r="4" fill="#2563eb"></circle>
+          </ng-container>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>

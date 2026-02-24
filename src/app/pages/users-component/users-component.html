@@ -182,13 +182,21 @@
                     Historial
                 </button>
 
-                <button type="button" (click)="setSection('transferencias')"
+                <!--  <button type="button" (click)="setSection('transferencias')"
                     class="px-5 py-2 rounded-full border text-sm font-semibold transition-colors duration-200"
                     [ngClass]="activeSection === 'transferencias'
           ? 'bg-[#235000] text-white border-[#235000]'
           : 'border-slate-300 text-slate-600 hover:bg-[#235000] hover:text-white hover:border-[#235000]'">
                     Transferencias
+                </button> -->
+                <button type="button" (click)="setSection('card')"
+                    class="px-5 py-2 rounded-full border text-sm font-semibold transition-colors duration-200"
+                    [ngClass]="activeSection === 'card'
+          ? 'bg-[#235000] text-white border-[#235000]'
+          : 'border-slate-300 text-slate-600 hover:bg-[#235000] hover:text-white hover:border-[#235000]'">
+                    Credencial
                 </button>
+
 
                 <!-- Actualizar (solo tiene sentido en Usuario) -->
                 <button type="button"
@@ -307,6 +315,12 @@
                         (click)="getLatestPurchases(selectedUser.uid!)" [disabled]="loadingLatestPurchases">
                         {{ loadingLatestPurchases ? 'Cargando...' : 'Recargar' }}
                     </button>
+
+                    <button type="button"
+                        class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 transition disabled:opacity-50"
+                        (click)="openBoardingPassModal(selectedUser.uid!)">
+                        Agregar
+                    </button>
                 </div>
 
                 <!-- TABLA -->
@@ -355,7 +369,7 @@
                                         </span>
 
                                         <span class="text-xs text-slate-500">
-                                            {{ p.creation_date | date:'medium' }}
+                                            Expira: {{ p.validTo}}
                                         </span>
                                     </div>
                                 </td>
@@ -366,7 +380,7 @@
                                 </td>
                                 <!-- PARADA -->
                                 <td class="px-6 py-4 text-slate-700">
-                                    {{ p.stopDescription }}
+                                    {{ p.stopName }}
                                 </td>
                                 <!-- TURNO -->
                                 <td class="px-6 py-4 text-slate-700">
@@ -389,7 +403,7 @@
 
                                         <span *ngIf="p.status !== 'completed'"
                                             class="px-2 py-1 rounded text-xs font-semibold bg-red-100 text-red-800">
-                                            Parcial
+                                            Pago Parcial
                                         </span>
 
                                         <span *ngIf="p.baja"
@@ -407,12 +421,17 @@
                                             Activo
                                         </span>
 
+                                        <span *ngIf="p.active === false"
+                                            class="px-2 py-1 rounded text-xs font-semibold bg-red-100 text-red-800">
+                                            Suspendido
+                                        </span>
+
                                     </div>
                                 </td>
 
                                 <!-- PRECIO -->
                                 <td class="px-6 py-4 text-right font-semibold text-slate-700">
-                                    {{ p.price | currency:p.currency:'symbol' }}
+                                    {{ p.amountPayment | currency:p.currency:'symbol' }}
                                 </td>
 
                                 <!-- ABONO -->
@@ -425,7 +444,7 @@
                                     <!-- Dropdown -->
                                     <div *ngIf="purchaseActionMenuOpenId === (p.id ?? p.idBoardingPass ?? '')"
                                         class="absolute mt-2 right-8 z-50 w-56 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden"
-                                        (click)="$event.stopPropagation()">                                     
+                                        (click)="$event.stopPropagation()">
                                         <button class="w-full text-left px-4 py-3 hover:bg-slate-50"
                                             (click)="deletePurchase(p, $event)">Eliminar Boleto</button>
                                         <button class="w-full text-left px-4 py-3 hover:bg-slate-50"
@@ -450,8 +469,10 @@
                     <div>
                         <h3 class="text-lg font-semibold text-slate-700">Detalle de Boleto</h3>
                         <p class="text-sm text-slate-500">
-                            {{ selectedPurchase.name }} · {{ selectedPurchase.creation_date | date:'medium' }}
+                            {{ selectedPurchase.name }} ·
+                            {{ getCreationDate(selectedPurchase.creation_date) | date:'medium' }}
                         </p>
+
                     </div>
 
                     <!-- Tabs tipo pastilla (como tu diseño) -->
@@ -491,116 +512,322 @@
                 </div>
 
                 <!-- ===== TAB: DETALLE ===== -->
-                <div *ngIf="purchaseDetailTab === 'detalle'" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Nombre</label>
-                        <div class="mt-1 text-slate-800 font-semibold">{{ selectedPurchase.name }}</div>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Operación</label>
-                        <div class="mt-1 text-slate-800">{{ selectedPurchase.operation_type }}</div>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Estatus</label>
-                        <div class="mt-1 text-slate-800">{{ selectedPurchase.status }}</div>
-                    </div>
+                <div *ngIf="purchaseDetailTab === 'detalle'" class="space-y-6">
 
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Ruta</label>
-                        <div class="mt-1 text-slate-800">{{ selectedPurchase.routeName }}</div>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Parada</label>
-                        <div class="mt-1 text-slate-800">{{ selectedPurchase.stopName }} ({{
-                            selectedPurchase.stopDescription }})</div>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Redondo</label>
-                        <div class="mt-1 text-slate-800">{{ selectedPurchase.round }}</div>
-                    </div>
+                    <!-- ===== DETALLE (cards) ===== -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Producto</label>
-                        <div class="mt-1 text-slate-800">{{ selectedPurchase.product_description }}</div>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Categoría</label>
-                        <div class="mt-1 text-slate-800">{{ selectedPurchase.category }}</div>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Método</label>
-                        <div class="mt-1 text-slate-800">{{ selectedPurchase.method }}</div>
+                        <!-- Nombre -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Nombre</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.name || '-' }}
+                            </div>
+                        </div>
+
+                        <!-- Operación -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Operación</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.operation_type || '-' }}
+                            </div>
+                        </div>
+
+                        <!-- Estatus -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Estatus</label>
+                            <div class="mt-2">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border
+                     bg-slate-50 text-slate-700 border-slate-200">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+                                    {{ selectedPurchase.status || '-' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Ruta -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Ruta</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.routeName || '-' }}
+                            </div>
+                        </div>
+
+                        <!-- Parada -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Parada</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.stopName || '-' }}
+                            </div>
+                            <div class="mt-1 text-xs text-slate-500" *ngIf="selectedPurchase.stopDescription">
+                                {{ selectedPurchase.stopDescription }}
+                            </div>
+                        </div>
+
+                        <!-- Redondo -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Redondo</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.round }}
+                            </div>
+                        </div>
+
+                        <!-- Producto -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Producto</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.product_description || '-' }}
+                            </div>
+                        </div>
+
+                        <!-- Categoría -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Categoría</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.category || '-' }}
+                            </div>
+                        </div>
+
+                        <!-- Método -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Método</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.method || '-' }}
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
                 <!-- ===== TAB: PAGO ===== -->
-                <div *ngIf="purchaseDetailTab === 'pago'" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Moneda</label>
-                        <div class="mt-1 text-slate-800">{{ selectedPurchase.currency }}</div>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Precio</label>
-                        <div class="mt-1 text-slate-800 font-semibold">
-                            {{ selectedPurchase.price | currency:selectedPurchase.currency:'symbol' }}
+                <div *ngIf="purchaseDetailTab === 'pago'" class="space-y-6">
+
+                    <!-- ===== RESUMEN PAGO (cards) ===== -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Moneda -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Moneda</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.currency }}
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Abono</label>
-                        <div class="mt-1 text-slate-800">
-                            {{ selectedPurchase.amountPayment || '-' }}
+
+                        <!-- Precio -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Precio</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.price | currency:selectedPurchase.currency:'symbol' }}
+                            </div>
+                        </div>
+
+                        <!-- Abono -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Abono</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.amountPayment | currency:selectedPurchase.currency:'symbol' }}
+                            </div>
+                        </div>
+
+                        <!-- Pago -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Pago</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.payment || '-' }}
+                            </div>
+                        </div>
+
+                        <!-- Tipo Pago -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Tipo Pago</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.typePayment || '-' }}
+                            </div>
+                        </div>
+
+                        <!-- Autorización -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Autorización</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.authorization || '-' }}
+                            </div>
                         </div>
                     </div>
 
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Pago</label>
-                        <div class="mt-1 text-slate-800">{{ selectedPurchase.payment || '-' }}</div>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Tipo Pago</label>
-                        <div class="mt-1 text-slate-800">{{ selectedPurchase.typePayment || '-' }}</div>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Autorización</label>
-                        <div class="mt-1 text-slate-800">{{ selectedPurchase.authorization }}</div>
+                    <!-- ===== PAGOS PARCIALES ===== -->
+                    <div *ngIf="selectedPurchase.isParcialPayment"
+                        class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+
+                        <!-- header sección -->
+                        <div
+                            class="flex items-center justify-between gap-3 px-5 py-4 border-b border-slate-200 bg-slate-50/60">
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm font-semibold text-slate-900">Pagos parciales</h3>
+
+                                    <!-- badge conteo -->
+                                    <span *ngIf="partialPayments.length"
+                                        class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                                        {{ partialPayments.length }} registro(s)
+                                    </span>
+                                </div>
+
+                                <p class="text-xs text-slate-500 mt-1" *ngIf="selectedPurchase.partialPaymentsCount">
+                                    Límite: {{ selectedPurchase.partialPaymentsCount }} pago(s)
+                                </p>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-slate-500" *ngIf="isLoadingPartialPayments">Cargando…</span>
+
+                                <button *ngIf="canAddPartialPayment" type="button" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 text-white text-sm
+                       hover:bg-slate-800 active:scale-[0.99] transition" (click)="openAddPartialPaymentModal()">
+                                    <span class="text-base leading-none">+</span>
+                                    Agregar pago
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- body -->
+                        <div class="p-5">
+
+                            <!-- tabla -->
+                            <div *ngIf="!isLoadingPartialPayments && partialPayments.length"
+                                class="overflow-x-auto rounded-xl border border-slate-200">
+                                <table class="min-w-full text-sm">
+                                    <thead class="bg-slate-50 text-slate-600 sticky top-0">
+                                        <tr>
+                                            <th class="text-left font-semibold px-4 py-3">#</th>
+                                            <th class="text-left font-semibold px-4 py-3">Periodo</th>
+                                            <th class="text-left font-semibold px-4 py-3">Monto</th>
+                                            <th class="text-left font-semibold px-4 py-3">Estatus</th>
+                                            <th class="text-left font-semibold px-4 py-3">Creado</th>
+                                            <th class="text-left font-semibold px-4 py-3">...</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody class="divide-y divide-slate-200">
+                                        <tr *ngFor="let p of partialPayments; let i = index"
+                                            class="hover:bg-slate-50/60 transition"
+                                            [ngClass]="i % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'">
+                                            <td class="px-4 py-3 text-slate-900 font-semibold whitespace-nowrap">
+                                                {{ p.paymentNumber }}
+                                            </td>
+                                            <td class="px-4 py-3 text-slate-900 whitespace-nowrap">
+                                                {{ p.startsAt.toDate() | date:'dd/MM/yyyy' }} - {{ p.endsAt.toDate() |
+                                                date:'dd/MM/yyyy' }}
+                                            </td>
+
+                                            <td class="px-4 py-3 text-slate-900 font-semibold whitespace-nowrap">
+                                                {{ p.amount | currency:selectedPurchase.currency:'symbol' }}
+                                            </td>
+
+                                            <td class="px-4 py-3">
+                                                <span
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border"
+                                                    [ngClass]="p.active
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                        : 'bg-slate-100 text-slate-600 border-slate-200'">
+                                                    <span class="h-1.5 w-1.5 rounded-full"
+                                                        [ngClass]="p.active ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+                                                    {{ p.active ? 'Activo' : 'Inactivo' }}
+                                                </span>
+                                            </td>
+
+                                            <td class="px-4 py-3 text-slate-700 whitespace-nowrap">
+                                                {{ p.createdAt?.toDate() | date:'dd/MM/yyyy' }}
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                <button type="button" class="h-9 w-9 inline-flex items-center justify-center rounded-xl
+                                                    text-slate-500 hover:text-red-600 hover:bg-red-50
+                                                    transition" title="Borrar" (click)="deletePartialPaymentModal(p)">                                                
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M3 6h18" />
+                                                        <path d="M8 6V4h8v2" />
+                                                        <path d="M6 6l1 16h10l1-16" />
+                                                        <path d="M10 11v6" />
+                                                        <path d="M14 11v6" />
+                                                    </svg>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- vacío -->
+                            <div *ngIf="!isLoadingPartialPayments && (!partialPayments || !partialPayments.length)"
+                                class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                                No hay pagos parciales registrados para este pase.
+                            </div>
+
+                        </div>
                     </div>
                 </div>
+
 
                 <!-- ===== TAB: VIGENCIA ===== -->
-                <div *ngIf="purchaseDetailTab === 'vigencia'" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Válido desde</label>
-                        <div class="mt-1 text-slate-800">
-                            {{ selectedPurchase.validFrom.toDate() | date:'medium' }}
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Válido hasta</label>
-                        <div class="mt-1 text-slate-800">
-                            {{ selectedPurchase.validTo.toDate() | date:'medium' }}
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Real Valid To</label>
-                        <div class="mt-1 text-slate-800">
-                            {{ selectedPurchase.realValidTo ? (selectedPurchase.realValidTo | date:'medium') : '-' }}
-                        </div>
-                    </div>
+                <div *ngIf="purchaseDetailTab === 'vigencia'" class="space-y-6">
 
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Promesa</label>
-                        <div class="mt-1 text-slate-800">{{ selectedPurchase.promiseDate | date:'medium' }}</div>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Vencimiento</label>
-                        <div class="mt-1 text-slate-800">{{ selectedPurchase.due_date ? (selectedPurchase.due_date |
-                            date:'medium') : '-' }}</div>
-                    </div>
-                    <div>
-                        <label class="text-sm font-medium text-slate-600">Conciliado</label>
-                        <div class="mt-1 text-slate-800">{{ selectedPurchase.conciliated ? 'Sí' : 'No' }}</div>
+                    <!-- ===== VIGENCIA (cards) ===== -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                        <!-- Válido desde -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Válido desde</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.validFrom }}
+                            </div>
+                        </div>
+
+                        <!-- Válido hasta -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Válido hasta</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.validTo }}
+                            </div>
+                        </div>
+
+                        <!-- Promesa -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Promesa</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.promiseDate ? (selectedPurchase.promiseDate | date:'medium') : '-'
+                                }}
+                            </div>
+                        </div>
+
+                        <!-- Vencimiento -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Vencimiento</label>
+                            <div class="mt-2 text-slate-900 font-semibold tracking-tight">
+                                {{ selectedPurchase.validTo }}
+                            </div>
+                        </div>
+
+                        <!-- Conciliado -->
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <label class="text-xs font-medium text-slate-500">Conciliado</label>
+
+                            <div class="mt-2">
+                                <span
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border"
+                                    [ngClass]="selectedPurchase.conciliated
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                : 'bg-amber-50 text-amber-700 border-amber-100'">
+
+                                    <span class="h-1.5 w-1.5 rounded-full"
+                                        [ngClass]="selectedPurchase.conciliated ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+
+                                    {{ selectedPurchase.conciliated ? 'Sí' : 'No' }}
+                                </span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
+
 
                 <!-- ===== TAB: TODOS LOS CAMPOS (JSON bonito) ===== -->
                 <div *ngIf="purchaseDetailTab === 'debug'"
@@ -614,28 +841,762 @@
 
 
         <!-- ====== 3) PANEL MENSAJES ====== -->
-        <div *ngIf="activeSection === 'mensajes'">
-            <div class="rounded-xl border border-slate-200 p-4">
-                <h3 class="text-base font-semibold text-slate-700 mb-2">Mensajes</h3>
-                <p class="text-slate-500">Aquí va el contenido de mensajes del usuario.</p>
+        <div *ngIf="activeSection === 'mensajes'" class="w-full">
+            <div class="mx-3 my-3 bg-white border rounded-[22px] overflow-hidden shadow-sm">
+                <!-- HEADER -->
+                <div class="bg-white border-bottom px-4 py-3 flex items-center justify-between">
+                    <!-- Cuando hay usuario -->
+                    <div *ngIf="selectedUser as su; else noUser" class="flex items-center gap-3 min-w-0">
+                        <!-- Avatar -->
+                        <div
+                            class="h-11 w-11 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-bold shadow-sm shrink-0">
+                            {{ (su.displayName || 'U').charAt(0) }}
+                        </div>
+
+                        <!-- Títulos -->
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                                <div class="font-semibold text-slate-900">Mensajes</div>
+                                <span
+                                    class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+                                    <span class="h-2 w-2 rounded-full bg-green-500"></span>
+                                    En línea
+                                </span>
+                            </div>
+
+                            <div class="text-sm text-slate-500 truncate">
+                                Conversación con <span class="font-semibold text-slate-700">{{ su.displayName ||
+                                    'Usuario' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cuando NO hay usuario -->
+                    <ng-template #noUser>
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div
+                                class="h-11 w-11 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center font-bold">
+                                ?
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-semibold text-slate-900">Mensajes</div>
+                                <div class="text-sm text-slate-500 truncate">Selecciona un usuario para ver la
+                                    conversación</div>
+                            </div>
+                        </div>
+                    </ng-template>
+                </div>
+
+                <!-- BODY -->
+                <div class="bg-slate-50">
+                    <!-- Chat panel -->
+                    <div class="mx-3 my-3 bg-white border rounded-4 overflow-hidden shadow-sm">
+
+                        <!-- Messages area -->
+                        <div #chatBody
+                            class="h-[280px] md:h-[320px] overflow-auto p-4 bg-gradient-to-b from-white to-slate-50"
+                            style="background-image: radial-gradient(rgba(15,23,42,.06) 1px, transparent 0); background-size: 18px 18px;">
+
+                            <!-- Loading -->
+                            <div *ngIf="loadingChatMessages" class="flex items-center gap-2 text-slate-500">
+                                <div class="spinner-border spinner-border-sm" role="status"></div>
+                                <span>Cargando mensajes…</span>
+                            </div>
+
+                            <!-- Empty -->
+                            <div *ngIf="!loadingChatMessages && !userChatMessageData.length"
+                                class="h-full min-h-[220px] flex flex-col items-center justify-center text-center gap-2">
+                                <div
+                                    class="h-14 w-14 rounded-2xl bg-white border shadow-sm flex items-center justify-center text-2xl">
+                                    💬</div>
+                                <div class="font-semibold text-slate-800">Aún no hay mensajes</div>
+                                <div class="text-sm text-slate-500">Escribe el primero para iniciar la conversación.
+                                </div>
+                            </div>
+
+                            <!-- Messages list -->
+                            <div *ngIf="!loadingChatMessages && userChatMessageData.length">
+                                <div *ngFor="let m of userChatMessageData; trackBy: trackByMsgId"
+                                    class="w-full my-2 flex" [ngClass]="isMe(m) ? 'justify-end' : 'justify-start'">
+
+                                    <div class="max-w-[86%] md:max-w-[70%] rounded-2xl px-3 py-2 shadow-sm border"
+                                        [ngClass]="isMe(m) ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-900 border-slate-200'">
+
+                                        <div class="flex items-center justify-between gap-3 text-xs opacity-75 mb-1">
+                                            <span class="font-semibold">
+                                                {{ isMe(m) ? 'Tú' : (m.fromName || 'Usuario') }}
+                                            </span>
+                                            <span class="whitespace-nowrap">
+                                                {{ (m.createdAt?.toDate ? m.createdAt.toDate() : m.createdAt) |
+                                                date:'dd/MM/yyyy HH:mm' }}
+                                            </span>
+                                        </div>
+
+                                        <div class="text-sm whitespace-pre-wrap break-words leading-snug">
+                                            {{ m.msg }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- FOOTER -->
+                        <div class="flex items-center gap-3 w-full border rounded-xl px-3 py-2 bg-white">
+                            <textarea [(ngModel)]="newMessage"
+                                class="flex-1 border-0 outline-none resize-none text-sm bg-transparent" rows="1"
+                                placeholder="Escribe tu mensaje…" (keydown)="onComposerKeydown($event)"></textarea>
+
+                            <button type="button"
+                                class="px-5 py-2 rounded-lg text-white font-semibold transition disabled:opacity-60"
+                                style="background-color:#235000;" (click)="showModalMessageCenter()"
+                                [disabled]="!canSend()">
+                                Enviar
+                            </button>
+                        </div>
+
+
+                    </div>
+                </div>
+
             </div>
         </div>
 
+
         <!-- ====== 4) PANEL HISTORIAL ====== -->
         <div *ngIf="activeSection === 'historial'">
-            <div class="rounded-xl border border-slate-200 p-4">
-                <h3 class="text-base font-semibold text-slate-700 mb-2">Historial</h3>
-                <p class="text-slate-500">Aquí va el historial del usuario.</p>
+            <!-- TABLA -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+
+                <!-- CONTENEDOR CON ALTURA FIJA -->
+                <div class="h-[320px] overflow-hidden">
+                    <!-- SCROLL SOLO EN TABLA -->
+                    <div class="h-full overflow-y-auto">
+                        <table class="min-w-full text-sm table-fixed">
+                            <!-- ANCHOS FIJOS POR COLUMNA -->
+                            <colgroup>
+                                <col class="w-[130px]" /> <!-- Fecha -->
+                                <col class="w-[120px]" /> <!-- Pase -->
+                                <col class="w-[320px]" /> <!-- Descripción (AHORA SÍ SE VE) -->
+                                <col class="w-[120px]" /> <!-- Operador (más chico) -->
+                                <col class="w-[90px]" /> <!-- Unidad -->
+
+                                <col class="w-[120px]" /> <!-- Ruta -->
+                                <col class="w-[80px]" /> <!-- Turno -->
+
+                            </colgroup>
+
+                            <thead class="text-white sticky top-0 z-10" style="background-color:#235000;">
+                                <tr class="text-left">
+                                    <th class="px-4 py-3 font-semibold">Fecha</th>
+                                    <th class="px-4 py-3 font-semibold">Pase</th>
+                                    <th class="px-4 py-3 font-semibold">Descripción</th>
+                                    <th class="px-4 py-3 font-semibold">Operador</th>
+                                    <th class="px-4 py-3 font-semibold">Unidad</th>
+
+                                    <th class="px-4 py-3 font-semibold">Ruta</th>
+                                    <th class="px-4 py-3 font-semibold">Turno</th>
+
+                                </tr>
+                            </thead>
+
+                            <tbody class="divide-y divide-slate-200">
+                                <tr *ngFor="let item of pagedActivityLog; let i = index"
+                                    class="hover:bg-slate-50 transition"
+                                    [ngClass]="i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'">
+                                    <!-- Fecha -->
+                                    <td class="px-4 py-3 text-slate-800 text-xs whitespace-nowrap truncate">
+                                        {{ item.date }}
+                                    </td>
+
+                                    <!-- Pase -->
+                                    <td class="px-4 py-3 text-slate-700  text-xs truncate">
+                                        {{ item.boardingPassData?.name || '' }}
+                                    </td>
+
+                                    <!-- Descripción (máx 2 líneas) -->
+                                    <td class="px-4 py-3 text-slate-700 text-xs leading-snug">
+                                        <div class="line-clamp-2 break-words" [title]="item.description">
+                                            {{ item.description || '-' }}
+                                        </div>
+                                    </td>
+
+                                    <!-- Operador -->
+                                    <td class="px-4 py-3 text-slate-700 text-xs truncate">
+                                        {{ item.driver || '-' }}
+                                    </td>
+
+                                    <!-- Unidad -->
+                                    <td class="px-4 py-3 text-slate-700 text-xs truncate">
+                                        {{ item.vehicleName || '-' }}
+                                    </td>
+
+
+
+                                    <!-- Ruta -->
+                                    <td class="px-4 py-3 text-slate-700  text-xs truncate">
+                                        {{ item.routeName || item.route || item.name || '-' }}
+                                    </td>
+
+                                    <!-- Turno -->
+                                    <td class="px-4 py-3 text-slate-700 text-xs whitespace-nowrap">
+                                        {{ item.round || '-' }}
+                                    </td>
+
+
+                                </tr>
+
+                                <tr *ngIf="pagedActivityLog.length === 0">
+                                    <td colspan="9" class="text-center py-8 text-slate-500">
+                                        Sin registros.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+
+                <!-- PAGINACIÓN (fija abajo) -->
+                <div class="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-white">
+                    <div class="text-sm text-slate-600">
+                        Mostrando
+                        <span class="font-semibold">{{ activityFromIndex }}</span>
+                        -
+                        <span class="font-semibold">{{ activityToIndex }}</span>
+                        de
+                        <span class="font-semibold">{{ activityTotalItems }}</span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button class="px-3 py-1 rounded-lg border border-slate-300 text-slate-700 disabled:opacity-50"
+                            (click)="prevActivityPage()" [disabled]="activityCurrentPage === 1" type="button">
+                            ‹
+                        </button>
+
+                        <span class="text-sm font-semibold text-slate-700">
+                            Página {{ activityCurrentPage }} / {{ activityTotalPages }}
+                        </span>
+
+                        <button class="px-3 py-1 rounded-lg border border-slate-300 text-slate-700 disabled:opacity-50"
+                            (click)="nextActivityPage()"
+                            [disabled]="activityCurrentPage === activityTotalPages || activityTotalPages === 0"
+                            type="button">
+                            ›
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </div>
 
         <!-- ====== 5) PANEL TRANSFERENCIAS ====== -->
-        <div *ngIf="activeSection === 'transferencias'">
+        <!--   <div *ngIf="activeSection === 'transferencias'">
             <div class="rounded-xl border border-slate-200 p-4">
                 <h3 class="text-base font-semibold text-slate-700 mb-2">Transferencias</h3>
                 <p class="text-slate-500">Aquí van las transferencias del usuario.</p>
             </div>
+        </div> -->
+
+        <!-- ====== 5) PANEL Credenciales ====== -->
+        <div *ngIf="activeSection === 'card'">
+            <div class="rounded-xl border border-slate-200 p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-base font-semibold text-slate-700">Credencial</h3>
+
+                    <button type="button" class="px-4 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800"
+                        (click)="downloadPdf()">
+                        Imprimir
+                    </button>
+                </div>
+
+                <!-- Contenedor que se convierte a PDF -->
+                <div id="credencial" class="flex gap-6 p-6 rounded-xl" style="
+    background:#f1f5f9;           /* bg-slate-100 */
+    width: 830px;                 /* 400 + 400 + gap aprox */
+    flex-wrap: nowrap;            /* NO apilar */
+  ">
+                    <!-- Frente -->
+                    <div class="rounded-2xl" style="
+      width:400px; height:310px;
+      background:#73C2FB;         /* sin alpha FE */
+      padding:16px;
+      border:1px solid #e2e8f0;   /* border-slate-200 */
+      box-shadow: 0 1px 2px rgba(0,0,0,.08); /* shadow-sm */
+      border-radius:16px;
+    ">
+                        <div class="flex items-center gap-3 mb-3">
+                            <img [src]="selectedUser.photoURL" alt="avatar" style="
+          width:40px; height:40px;
+          border-radius:9999px;
+          object-fit:cover;
+          border:1px solid rgba(0,0,0,.2);
+        " crossOrigin="anonymous" (error)="onAvatarError($event)" />
+
+                            <div style="line-height:1.2;">
+                                <div style="font-weight:700; color:#0f172a; font-size:20px;">
+                                    {{ selectedUser.displayName }}
+                                </div>
+                                <div style="color:#0f172a; opacity:.75; font-size:12px;">
+                                    Credencial And 2026
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="color:#0f172a; font-size:12px;">
+                            <div style="font-weight:800; margin-bottom:6px;">Credencial And 2026</div>
+
+                            <div style="margin-bottom:8px;">
+                                Operación: {{ selectedUser.defaultRouteName || '' }}
+                                <span style="margin:0 6px;">/</span>
+                                Turno: {{ selectedUser.defaultRound || '' }}
+                            </div>
+
+                            <div>
+                                Identificación: {{ selectedUser.studentId || '' }}
+                            </div>
+                        </div>
+
+                        <!-- QR -->
+                        <div style="
+                                display:block;
+                                justify-content:center;
+                                align-items:center;
+                                margin-left: 80px;
+                                margin-top: 5px;
+                                min-height: 180px;     /* reserva espacio real para el QR */
+                                overflow: hidden;      /* evita que el QR “se salga” */
+                            ">
+                            <img *ngIf="qrDataUrl" [src]="qrDataUrl" alt="QR" style="
+                            width:120px;
+                            height:120px;
+                            background:#fff;
+                            padding:5px;
+                            border-radius:6px;
+                            display:block;
+                            object-fit: contain;
+                            " />
+                        </div>
+
+                    </div>
+
+                    <!-- Reverso -->
+                    <div class="rounded-2xl" style="
+                        width:400px; height:310px;
+                        background:#73C2FB;
+                        padding:16px;
+                        border:1px solid #e2e8f0;
+                        box-shadow: 0 1px 2px rgba(0,0,0,.08);
+                        border-radius:16px;
+                        ">
+                        <div class="grid grid-cols-3 gap-3" style="height: 260px;">
+                            <div *ngFor="let _ of [1,2,3,4,5,6]" style="
+                            height:120px;
+                            border:1px solid #111;
+                            padding:8px;
+                            border-radius:10px;
+                            background: rgba(255,255,255,.4); /* bg-white/40 */
+                            ">
+                                <div style="
+                                width:100%; height:100%;
+                                border-radius:10px;
+                                background-image:url('../../../assets/images/logo/andlogoSL.png');
+                                background-repeat:no-repeat;
+                                background-position:center;
+                                background-size:contain;
+                            "></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:10px;color:#0f172a;font-size:12px;white-space:nowrap;">
+                            Derechos reservados Apps And. Esta credencial es intransferible
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== MODAL: NUEVO PASE ========== -->
+<div *ngIf="isBoardingPassModalOpen" class="fixed inset-0 z-[9999] flex items-center justify-center">
+
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/50" (click)="closeBoardingPassModal()"></div>
+
+    <!-- Panel -->
+    <div class="relative w-[95vw] max-w-5xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+            <div>
+                <h3 class="text-lg font-semibold text-slate-800">Nuevo pase</h3>
+                <p class="text-sm text-slate-500">Generar pase para: <span class="font-semibold">{{
+                        selectedUser?.displayName }}</span></p>
+            </div>
+
+            <button type="button" class="h-10 w-10 grid place-items-center rounded-xl hover:bg-slate-100"
+                (click)="closeBoardingPassModal()">
+                ✕
+            </button>
         </div>
 
+        <!-- Body -->
+        <form [formGroup]="boardingPassForm" (ngSubmit)="submitBoardingPass()"
+            class="px-6 py-5 max-h-[70vh] overflow-y-auto">
+
+            <!-- Grid principal -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <!-- Servicio -->
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Servicio</label>
+                    <select
+                        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        formControlName="product_id" (change)="onProductSelected($any($event.target).value)">
+                        <option value="">Seleccionar producto / servicio</option>
+                        <option *ngFor="let p of products" [value]="p.productId">
+                            {{ p.name }} {{ p.frequencies ? '('+p.frequencies+')' : '' }} - ${{ p.price }}
+                        </option>
+                    </select>
+                    <p *ngIf="isInvalid('product_id')" class="mt-1 text-xs text-red-600">Selecciona un servicio.</p>
+                </div>
+
+                <!-- Operación -->
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Operación</label>
+                    <select
+                        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        formControlName="routeId" (change)="onRouteSelected($any($event.target).value)">
+                        <option value="">Selecciona la Operación</option>
+                        <option *ngFor="let r of routes2" [value]="r.routeId">
+                            {{ r.name }}
+                        </option>
+                    </select>
+                    <p *ngIf="isInvalid('routeId')" class="mt-1 text-xs text-red-600">Selecciona una operación.</p>
+                </div>
+
+                <!-- Parcial Payment Select (solo si es producto parcial) -->
+                <!-- ✅ Pago parcial (solo si el producto es parcial) -->
+                <div *ngIf="productSelected?.isParcialPayment === true" class="md:col-span-2">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h4 class="text-sm font-semibold text-slate-800">Pago parcial</h4>
+                                <p class="text-xs text-slate-600">
+                                    Selecciona el periodo que vas a cobrar y el sistema ajustará el monto.
+                                </p>
+                            </div>
+
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold"
+                                [ngClass]="isPartialLoading ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'">
+                                {{ isPartialLoading ? 'Cargando…' : 'Parcial' }}
+                            </span>
+                        </div>
+
+                        <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Select periodo -->
+                            <div>
+                                <label class="text-sm font-medium text-slate-600">Periodo</label>
+
+                                <select
+                                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-slate-100"
+                                    formControlName="partialPaymentId"
+                                    [disabled]="isPartialLoading || partialPaymentOptions.length === 0"
+                                    (change)="onPartialPaymentSelected($any($event.target).value)">
+                                    <option value="">
+                                        {{ isPartialLoading ? 'Cargando pagos parciales…' : 'Selecciona el periodo' }}
+                                    </option>
+
+                                    <option *ngFor="let opt of partialPaymentOptions" [value]="opt.id">
+                                        {{ opt.label }}
+                                    </option>
+                                </select>
+
+                                <p *ngIf="!isPartialLoading && partialPaymentOptions.length === 0"
+                                    class="mt-1 text-xs text-amber-700">
+                                    Este producto es parcial pero no tiene periodos activos configurados.
+                                </p>
+                            </div>
+
+                            <!-- Monto del parcial seleccionado -->
+                            <div>
+                                <label class="text-sm font-medium text-slate-600">Monto del periodo</label>
+
+                                <input type="number"
+                                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    formControlName="partialPaymentAmountSelected" readonly />
+
+                                <p class="mt-1 text-[11px] text-slate-500">
+                                    Se llena automáticamente al seleccionar un periodo.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+                <!-- Estaciones -->
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Estación</label>
+                    <select
+                        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        formControlName="stopId" (change)="onStopSelected($any($event.target).value)">
+                        <option value="">Selecciona la estación</option>
+                        <option *ngFor="let s of stopPoints" [value]="s.stopPointId">
+                            {{ s.name }} - {{ s.description }}
+                        </option>
+                    </select>
+                    <p *ngIf="isInvalid('stopId')" class="mt-1 text-xs text-red-600">Selecciona una estación.</p>
+                </div>
+
+                <!-- Turno -->
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Turno</label>
+                    <select
+                        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        formControlName="round">
+                        <option value="">Selecciona Turno</option>
+                        <option value="Día">Día</option>
+                        <option value="Tarde">Tarde</option>
+                        <option value="Noche">Noche</option>
+                    </select>
+                    <p *ngIf="isInvalid('round')" class="mt-1 text-xs text-red-600">Selecciona un turno.</p>
+                </div>
+
+                <!-- Tipo de pago -->
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Tipo de Pago</label>
+                    <select
+                        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        formControlName="payment" (change)="changePayment($any($event.target).value)">
+                        <option value="">Selecciona un tipo de Pago</option>
+                        <option value="Mensualidad">Mensualidad</option>
+                        <option value="Anticipo">Anticipo</option>
+                        <option value="Liquidacion">Liquidación</option>
+                    </select>
+                    <p *ngIf="isInvalid('payment')" class="mt-1 text-xs text-red-600">Selecciona un tipo de pago.</p>
+                </div>
+
+                <!-- Tipo referencia -->
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Tipo de Referencia</label>
+                    <select
+                        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        formControlName="typePayment" (change)="changePaymentType($any($event.target).value)">
+                        <option value="">Selecciona una Referencia</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Sistema">Pago por Sistema</option>
+                    </select>
+                    <p *ngIf="isInvalid('typePayment')" class="mt-1 text-xs text-red-600">Selecciona una referencia.</p>
+                </div>
+
+                <!-- Total -->
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Total a pagar</label>
+                    <input type="number"
+                        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        formControlName="amount" (input)="onAmountChange()" min="0" />
+                    <p *ngIf="isInvalid('amount')" class="mt-1 text-xs text-red-600">Ingresa el total.</p>
+                </div>
+
+                <!-- Cantidad a pagar -->
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Cantidad a pagar</label>
+                    <input type="number"
+                        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        formControlName="amountPayment" min="0" />
+                    <p *ngIf="isInvalid('amountPayment')" class="mt-1 text-xs text-red-600">Ingresa la cantidad a pagar.
+                    </p>
+                </div>
+
+                <!-- Fecha compromiso (solo anticipo) -->
+                <div *ngIf="isAnticipo">
+                    <label class="text-sm font-medium text-slate-600">Fecha compromiso</label>
+                    <input type="date"
+                        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        formControlName="promiseDate" />
+                </div>
+
+                <!-- Cortesía -->
+                <div class="flex items-center gap-3 mt-6">
+                    <input type="checkbox" class="h-4 w-4" formControlName="is_courtesy"
+                        (change)="onCourtesyChange()" />
+                    <span class="text-sm font-medium text-slate-700">¿Es cortesía?</span>
+                </div>
+
+                <!-- Activar pase -->
+                <div class="flex items-center gap-3 mt-6">
+                    <input type="checkbox" class="h-4 w-4" formControlName="active" />
+                    <span class="text-sm font-medium text-slate-700">Activar pase</span>
+                </div>
+
+                <!-- Vigencia -->
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Válido desde</label>
+                    <input type="date"
+                        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        formControlName="validFrom" />
+                    <p *ngIf="isInvalid('validFrom')" class="mt-1 text-xs text-red-600">Selecciona fecha inicio.</p>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium text-slate-600">Válido hasta</label>
+                    <input type="date"
+                        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        formControlName="validTo" />
+                    <p *ngIf="isInvalid('validTo')" class="mt-1 text-xs text-red-600">Selecciona fecha fin.</p>
+                </div>
+
+                <!-- Comprobante (solo Transferencia) -->
+                <div *ngIf="ifValidPayment" class="md:col-span-2">
+                    <label class="text-sm font-medium text-slate-600">Comprobante (Transferencia)</label>
+                    <input type="file" accept="image/png,image/jpeg,image/gif,image/bmp"
+                        class="mt-1 block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800"
+                        (change)="onReceiptSelected($event)" />
+                    <p class="mt-1 text-xs text-slate-500">Solo 1 archivo (imagen). Si quieres subir a Firebase Storage,
+                        lo hacemos desde TS.</p>
+                </div>
+
+            </div>
+        </form>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200 bg-white">
+            <button type="button" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100"
+                (click)="closeBoardingPassModal()">
+                Cancelar
+            </button>
+
+            <button type="button" class="px-5 py-2 rounded-lg text-white font-semibold disabled:opacity-60"
+                style="background-color:#235000;" (click)="submitBoardingPass()" [disabled]="isConfirmLoading">
+                {{ isConfirmLoading ? 'Generando...' : 'Generar Pase' }}
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- ========== MODAL: Agregar Pago ========== -->
+<div *ngIf="showAddPartialPaymentModal" class="fixed inset-0 z-50">
+    <!-- overlay -->
+    <div class="absolute inset-0 bg-black/40" (click)="cancelAddPartialPaymentModal()"></div>
+
+    <!-- modal -->
+    <div class="relative min-h-full flex items-center justify-center p-4">
+        <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+
+            <!-- header -->
+            <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/60">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <div class="text-base font-semibold text-slate-900">Agregar pago parcial</div>
+                        <div class="text-xs text-slate-500 mt-1">
+                            Selecciona el pago pendiente para generarlo en este pase.
+                        </div>
+                    </div>
+
+                    <button type="button"
+                        class="h-9 w-9 grid place-items-center rounded-xl hover:bg-slate-100 text-slate-600"
+                        (click)="cancelAddPartialPaymentModal()">
+                        ✕
+                    </button>
+                </div>
+            </div>
+
+            <!-- body -->
+            <div class="px-6 py-5">
+
+                <!-- estado -->
+                <div class="flex items-center justify-between gap-3 mb-4">
+                    <div class="text-sm text-slate-700">
+                        <span class="font-semibold">{{ partialPayments.length }}</span> generado(s) ·
+                        <span class="font-semibold">{{ selectedPurchase?.partialPaymentsCount ?? 0 }}</span> total
+                    </div>
+
+                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border"
+                        [ngClass]="availablePartialPayments.length
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                  : 'bg-slate-100 text-slate-600 border-slate-200'">
+                        {{ availablePartialPayments.length ? 'Disponible' : 'Sin pendientes' }}
+                    </span>
+                </div>
+
+                <!-- si NO hay disponibles -->
+                <div *ngIf="!availablePartialPayments.length"
+                    class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                    No hay pagos parciales pendientes para generar en este pase.
+                </div>
+
+                <!-- si SÍ hay disponibles -->
+                <div *ngIf="availablePartialPayments.length" class="space-y-3">
+
+                    <!-- selector -->
+                    <div class="rounded-xl border border-slate-200 bg-white p-4">
+                        <label class="text-xs font-medium text-slate-500">Pago a generar</label>
+
+                        <select class="mt-2 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
+                           focus:outline-none focus:ring-2 focus:ring-[#235000]/30 focus:border-[#235000]/60"
+                            [(ngModel)]="selectedAvailablePaymentId">
+                            <option value="">Selecciona un pago pendiente…</option>
+
+                            <option *ngFor="let p of availablePartialPayments" [value]="p.id">
+                                Pago #{{ p.paymentNumber }} ·
+                                {{ p.startsAt.toDate() | date:'dd/MM/yyyy' }} - {{ p.endsAt.toDate() | date:'dd/MM/yyyy'
+                                }} ·
+                                {{ p.amount | currency:(selectedPurchase?.currency || 'MXN'):'symbol' }}
+                            </option>
+
+                        </select>
+
+                        <div class="mt-2 text-xs text-slate-500">
+                            Solo aparecen los pagos que aún no han sido generados.
+                        </div>
+                    </div>
+
+                    <!-- preview (opcional, se ve pro) -->
+                    <div *ngIf="selectedAvailablePaymentId"
+                        class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+                        <ng-container *ngFor="let p of availablePartialPayments">
+                            <div *ngIf="p.id === selectedAvailablePaymentId" class="flex flex-wrap items-center gap-2">
+                                <span
+                                    class="inline-flex items-center rounded-full bg-slate-900 text-white px-2.5 py-1 text-xs font-semibold">
+                                    Pago #{{ p.paymentNumber }}
+                                </span>
+                                <span class="text-slate-700">
+                                    {{ p.startsAt.toDate() | date:'dd/MM/yyyy' }} -
+                                    {{ p.endsAt.toDate() | date:'dd/MM/yyyy' }}
+                                </span>
+                                <span class="font-semibold text-slate-900">
+                                    {{ p.amount | currency:(selectedPurchase?.currency || 'MXN'):'symbol' }}
+                                </span>
+                            </div>
+                        </ng-container>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- footer -->
+            <div class="px-6 py-4 border-t border-slate-200 bg-white flex items-center justify-end gap-2">
+                <button type="button"
+                    class="px-4 py-2 rounded-xl border border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
+                    (click)="cancelAddPartialPaymentModal()">
+                    Cancelar
+                </button>
+
+                <button type="button"
+                    class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                    [disabled]="!availablePartialPayments.length || !selectedAvailablePaymentId"
+                    (click)="confirmAddPartialPaymentModal()">
+                    Aceptar
+                </button>
+            </div>
+
+        </div>
     </div>
 </div>

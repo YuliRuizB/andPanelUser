@@ -1,1 +1,197 @@
-<p>maps-component works!</p>
+<!-- Filtros -->
+<div class="h-screen w-full flex flex-col">
+    <div class="h-[9%] min-h-[40px] bg-white border-b border-gray-200 px-4 py-2 flex items-center">
+        <!-- Texto a la izquierda -->
+        <p class="text-sm font-semibold text-gray-700">
+            <button class="rounded-xl  px-4 py-2 text-white" style="background-color:#235000">
+                Mostrar rutas
+            </button>
+            <ng-container *ngIf="drivers.length > 0; else noLive">
+                Información: Rutas Activas ({{ drivers.length }}) transmitiendo en vivo
+            </ng-container>
+
+            <ng-template #noLive>
+                No hay rutas transmitiendo en vivo
+            </ng-template>
+        </p>
+
+        <div class="flex-1"></div>
+
+        <button type="button"
+            class="h-8 rounded-md px-4 text-sm font-medium text-white transition disabled:opacity-60 disabled:cursor-not-allowed"
+            style="background-color:#235000" [disabled]="drivers.length === 0" (click)="toggleRouteLine()">
+            {{ showRouteLine ? 'Ocultar paradas de ruta' : 'Paradas de Ruta' }}
+        </button>
+
+        <button type="button"
+            class="ml-3 h-8 rounded-md px-4 text-sm font-medium text-white transition disabled:opacity-60 disabled:cursor-not-allowed"
+            style="background-color:#235000" [disabled]="drivers.length === 0" (click)="toggleRouteLineStreet()">
+            {{ showRouteLineStreet ? 'Ocultar recorrido' : 'Recorrido' }}
+        </button>
+    </div>
+
+    <!-- Mapa -->
+    <div class="flex-1 w-full relative">
+        <google-map class="absolute inset-0 map-transparent" [height]="'100%'" [width]="'100%'" [center]="center"
+            [zoom]="zoom" [options]="mapOptions">
+
+            <!-- ✅ Buses (trackBy) -->
+            <map-marker *ngFor="let item of markerItems; trackBy: trackByDriver" [position]="item.pos"
+                [icon]="markerIcon" [label]="{
+          text: item.label,
+          color: '#1f2937',
+          fontSize: '12px',
+          fontWeight: '600'
+        }" (mapClick)="openDriverModal(item.driver)">
+            </map-marker>
+
+            <!-- ✅ Stops (routeOverlays) -->
+            <ng-container *ngIf="showRouteLine">
+                <ng-container *ngFor="let r of routeOverlays; trackBy: trackByRoute">
+
+                    <map-marker *ngFor="let s of r.stopMarkers; trackBy: trackByVertex" [position]="s.pos"
+                        [icon]="stopIcon" (mapClick)="openStopModal(s)">
+                    </map-marker>
+                </ng-container>
+            </ng-container>
+
+            <!-- ✅ Street (routeOverlaysStreet) -->
+            <ng-container *ngIf="showRouteLineStreet">
+                <ng-container *ngFor="let r of routeOverlaysStreet; trackBy: trackByRoute">
+                    <map-polyline [path]="r.path" [options]="{
+              strokeColor: r.color,
+              strokeOpacity: 1,
+              strokeWeight: 4,
+              clickable: false
+            }">
+                    </map-polyline>
+
+                    <map-marker *ngFor="let s of r.stopMarkers; trackBy: trackByVertex" [position]="s.pos" [icon]="{
+              path: gm.SymbolPath.CIRCLE,
+              scale: 3,
+              fillColor: r.color,
+              fillOpacity: .85,
+              strokeColor: '#ffffff',
+              strokeWeight: 1
+            }">
+                    </map-marker>
+                </ng-container>
+            </ng-container>
+        </google-map>
+    </div>
+</div>
+
+<!-- Modal -->
+<div *ngIf="selectedDriver" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40" (click)="closeDriverModal()"></div>
+
+    <div class="relative w-full max-w-md rounded-xl bg-white shadow-xl p-5">
+        <div class="flex items-start justify-between">
+            <h3 class="text-lg font-semibold text-gray-800">Detalle de ejecutor</h3>
+            <button type="button" class="rounded-md px-2 py-1 text-gray-500 hover:bg-gray-100"
+                (click)="closeDriverModal()">
+                ✕
+            </button>
+        </div>
+
+        <div class="mt-4 space-y-3 text-sm">
+            <div class="flex justify-between gap-4">
+                <span class="text-gray-500">Ejecutor</span>
+                <span class="font-medium text-gray-800 text-right">
+                    {{ selectedDriver.driver }}
+                </span>
+            </div>
+
+            <div class="flex justify-between gap-4">
+                <span class="text-gray-500">Ha concluido</span>
+                <span class="font-medium text-right" [class.text-green-600]="selectedDriver.hasEnded"
+                    [class.text-orange-600]="!selectedDriver.hasEnded">
+                    {{ selectedDriver.hasEnded ? 'Sí' : 'No' }}
+                </span>
+            </div>
+
+            <div class="flex justify-between gap-4">
+                <span class="text-gray-500">Ruta</span>
+                <span class="font-medium text-gray-800 text-right">
+                    {{ selectedDriver.routeName }}
+                </span>
+            </div>
+
+            <div class="flex justify-between gap-4">
+                <span class="text-gray-500">Turno</span>
+                <span class="font-medium text-gray-800 text-right">
+                    {{ selectedDriver.round }}
+                </span>
+            </div>
+
+            <div class="flex justify-between gap-4">
+                <span class="text-gray-500">Usuarios Registrados</span>
+                <span class="font-medium text-gray-800 text-right">
+                    {{ selectedDriver.count }}
+                </span>
+            </div>
+
+            <div class="flex justify-between gap-4">
+                <span class="text-gray-500">Vehículo</span>
+                <span class="font-medium text-gray-800 text-right">
+                    {{ selectedDriver.vehicleName }}
+                </span>
+            </div>
+        </div>
+
+        <div class="flex justify-between gap-4 mt-3">
+            <span class="text-gray-500">Última transmisión</span>
+            <span class="font-medium text-gray-800 text-right">
+                {{ formatLastUpdate(selectedDriver.lastUpdatedAt) }}
+            </span>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+            <button type="button" class="h-9 rounded-md bg-gray-800 px-4 text-white hover:bg-gray-700"
+                (click)="closeDriverModal()">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div *ngIf="isStopModalOpen" class="fixed inset-0 z-50 flex items-center justify-center">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/50" (click)="closeStopModal()"></div>
+
+    <!-- Panel -->
+    <div class="relative z-10 w-[92%] max-w-lg rounded-2xl bg-white p-5 shadow-xl" (click)="$event.stopPropagation()">
+        <div class="flex items-start justify-between gap-3">
+            <div>
+                <h3 class="text-lg font-semibold">
+                    {{ selectedStop?.name || 'Parada' }}
+                </h3>
+                <p class="mt-1 text-sm text-gray-500">
+                    <span *ngIf="selectedStop?.active !== undefined">
+                        • {{ selectedStop?.active ? 'Activa' : 'Inactiva' }}
+                    </span>
+                </p>
+            </div>
+
+            <button class="rounded-lg px-3 py-1 text-gray-600 hover:bg-gray-100" (click)="closeStopModal()"
+                aria-label="Cerrar">
+                ✕
+            </button>
+        </div>
+
+        <div class="mt-4">
+            <p class="text-sm font-medium text-gray-700">Descripción</p>
+            <p class="mt-1 text-sm text-gray-800">
+                {{ selectedStop?.description || 'Sin descripción' }}
+            </p>
+        </div>
+
+        <div class="mt-6 flex justify-end gap-2">
+            <button class="rounded-xl bg-gray-100 px-4 py-2 text-sm font-medium hover:bg-gray-200"
+                (click)="closeStopModal()">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>

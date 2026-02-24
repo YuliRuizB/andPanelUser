@@ -16,6 +16,9 @@ import { DivisionComponent } from './pages/division-component/division-component
 import { OperationComponent } from './pages/operation-component/operation-component';
 import { profile } from 'console';
 import { ProfileComponent } from './pages/profile-component/profile-component';
+import { ProductsComponent } from './pages/products/products';
+import { PromotionsComponent } from './pages/promotions/promotions';
+import { BoardingPassComponent } from './pages/boarding-pass/boarding-pass';
 
 export const routes: Routes = [
     // que / redirija a /login
@@ -42,6 +45,9 @@ export const routes: Routes = [
             { path: 'division', component: DivisionComponent },
             { path: 'operation', component: OperationComponent },
             { path: 'profile', component: ProfileComponent },
+            { path: 'products', component: ProductsComponent }, 
+            { path: 'promotions', component: PromotionsComponent }, 
+            { path: 'boardingPass', component: BoardingPassComponent },
         ]
     },    
     { path: '**', redirectTo: 'login' }

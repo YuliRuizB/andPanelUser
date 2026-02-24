@@ -1,0 +1,613 @@
+<div class="min-h-screen bg-gray-50">
+  <div class="mx-auto max-w-6xl px-4 py-8">
+
+    <!-- Tabs -->
+    <div class="flex justify-center">
+      <div class="inline-flex rounded-2xl bg-[#235000] p-1 text-white shadow-lg">
+
+        <button class="px-8 py-3 rounded-xl text-sm font-semibold transition focus:outline-none"
+          [ngClass]="tab === 'active' ? 'bg-[#9db091] text-white' : 'bg-transparent text-white hover:bg-white/10'"
+          (click)="setTab('active')">
+          Activos
+        </button>
+
+        <button class="px-8 py-3 rounded-xl text-sm font-semibold transition focus:outline-none"
+          [ngClass]="tab === 'inactive' ? 'bg-[#9db091] text-white' : 'bg-transparent text-white hover:bg-white/10'"
+          (click)="setTab('inactive')">
+          Inactivos
+        </button>
+
+        <button class="px-8 py-3 rounded-xl text-sm font-semibold transition focus:outline-none"
+          [ngClass]="tab === 'add' ? 'bg-[#9db091] text-white' : 'bg-transparent text-white hover:bg-white/10'"
+          (click)="setTab('add')">
+          Agregar
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Grid Activos -->
+    <div *ngIf="tab === 'active'" class="mt-8">
+
+      <div *ngIf="activeProducts.length === 0"
+        class="flex h-[40vh] flex-col items-center justify-center text-center text-gray-500">
+        <p class="text-lg font-semibold">No tienes productos activos</p>
+        <p class="mt-1 text-sm">Activa un producto o crea uno desde “Agregar”.</p>
+      </div>
+
+      <div *ngIf="activeProducts.length > 0" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+
+        <button *ngFor="let p of activeProducts" (click)="openModal(p)"
+          class="group rounded-2xl bg-white shadow hover:shadow-lg transition overflow-hidden text-left">
+
+          <div class="aspect-[16/10] w-full overflow-hidden bg-gray-100">
+            <img [src]="p.imageUrl" [alt]="p.name"
+              class="h-full w-full object-cover group-hover:scale-[1.02] transition" />
+          </div>
+
+          <div class="p-4">
+            <div class="flex items-start justify-between gap-3">
+              <h3 class="font-semibold text-gray-900 line-clamp-2">{{ p.name }}</h3>
+
+              <span class="shrink-0 rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">
+                Activo
+              </span>
+            </div>
+
+            <p class="mt-2 text-sm text-gray-600 line-clamp-2">{{ p.description }}</p>
+
+            <div class="mt-3 text-sm text-gray-700 font-semibold">
+              $ {{ p.price }}
+            </div>
+          </div>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Grid Inactivos -->
+    <div *ngIf="tab === 'inactive'" class="mt-8">
+
+      <div *ngIf="inactiveProducts.length === 0"
+        class="flex h-[40vh] flex-col items-center justify-center text-center text-gray-500">
+        <p class="text-lg font-semibold">No tienes productos inactivos</p>
+        <p class="mt-1 text-sm">Cuando desactives un producto, aparecerá aquí.</p>
+      </div>
+
+      <div *ngIf="inactiveProducts.length > 0" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+
+        <button *ngFor="let p of inactiveProducts" (click)="openModal(p)"
+          class="group rounded-2xl bg-white shadow hover:shadow-lg transition overflow-hidden text-left opacity-95">
+
+          <div class="aspect-[16/10] w-full overflow-hidden bg-gray-100">
+            <img [src]="p.imageUrl" [alt]="p.name"
+              class="h-full w-full object-cover grayscale group-hover:grayscale-0 transition" />
+          </div>
+
+          <div class="p-4">
+            <div class="flex items-start justify-between gap-3">
+              <h3 class="font-semibold text-gray-900 line-clamp-2">{{ p.name }}</h3>
+
+              <span class="shrink-0 rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">
+                Inactivo
+              </span>
+            </div>
+
+            <p class="mt-2 text-sm text-gray-600 line-clamp-2">{{ p.description }}</p>
+
+            <div class="mt-3 text-sm text-gray-700 font-semibold">
+              $ {{ p.price }}
+            </div>
+          </div>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Agregar -->
+    <div *ngIf="tab === 'add'" class="mt-8">
+      <div class="rounded-2xl bg-white shadow p-6">
+        <form class="grid grid-cols-1 gap-5 md:grid-cols-2" (ngSubmit)="createProduct()" [formGroup]="addForm">
+
+          <!-- File + preview (ocupa 2 columnas) -->
+          <div class="md:col-span-2 flex items-start gap-5">
+            <!-- Preview -->
+            <div class="shrink-0">
+              <div
+                class="h-20 w-20 rounded-2xl border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center">
+                <img *ngIf="imagePreviewUrl" [src]="imagePreviewUrl" alt="Preview" class="h-full w-full object-cover" />
+                <span *ngIf="!imagePreviewUrl" class="text-[10px] text-gray-400 text-center px-2">
+                  Sin imagen
+                </span>
+              </div>
+            </div>
+
+            <!-- File button + name -->
+            <div class="flex-1">
+              <label class="text-sm font-semibold text-gray-700">Carga la imagen</label>
+
+              <div class="mt-2 flex items-center gap-4">
+                <input type="file" id="productImage" accept="image/*" (change)="onAddFileChange($event)"
+                  class="hidden" />
+
+                <label for="productImage" class="px-5 py-2 rounded-xl text-sm font-semibold cursor-pointer transition
+                     bg-[#9db091] text-white hover:bg-[#8aa37f]
+                     focus:outline-none focus:ring-2 focus:ring-[#9db091]/50">
+                  Cargar imagen
+                </label>
+
+                <span class="text-sm text-gray-500 truncate">
+                  {{ selectedFileName || 'Ningún archivo seleccionado' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nombre -->
+          <div>
+            <label class="text-sm font-semibold text-gray-700">Nombre</label>
+            <input type="text" formControlName="name" class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition
+                 focus:outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+          </div>
+
+          <!-- Precio -->
+          <div>
+            <label class="text-sm font-semibold text-gray-700">Precio</label>
+            <input type="number" formControlName="price" class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition
+                 focus:outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+          </div>
+
+          <!-- Categoría -->
+          <div>
+            <label class="text-sm font-semibold text-gray-700">Categoria</label>
+            <select formControlName="category" class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none transition
+           focus:outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]">
+
+              <option value="" disabled>Selecciona una opción</option>
+
+              <option value="permanente">Servicio de Transporte Ordinario</option>
+              <option value="especial">Servicio Especial</option>
+              <option value="producto">Producto</option>
+              <option value="comedor">Comedor</option>
+              <option value="seguridad">Seguridad</option>
+              <option value="monitoreo">Monitoreo</option>
+              <option value="limpieza">Limpieza</option>
+              <option value="construccion">Construcción</option>
+              <option value="bienesRaices">Bienes Raíces</option>
+              <option value="mantenimiento">Mantenimiento</option>
+              <option value="otros">Otros</option>
+
+            </select>
+          </div>
+
+          <!-- Tipo -->
+          <div>
+            <label class="text-sm font-semibold text-gray-700">Tipo</label>
+            <input type="text" formControlName="type" class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition
+                 focus:outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+          </div>
+
+          <!-- Pago parcial (toggle + cantidad + preview) -->
+          <div class="md:col-span-2 rounded-2xl border border-gray-200 bg-gray-50 p-5">
+            <div class="flex items-center justify-between gap-4">
+              <div>
+                <p class="text-sm font-semibold text-gray-800">Pago parcial</p>
+                <p class="text-xs text-gray-500">Genera periodos de fechas para los pagos parciales.</p>
+              </div>
+
+              <!-- Toggle -->
+              <label class="inline-flex cursor-pointer items-center gap-3">
+                <input type="checkbox" formControlName="isParcialPayment" class="peer sr-only">
+                <span class="relative h-6 w-11 rounded-full bg-gray-300 transition peer-checked:bg-[#9db091]">
+                  <span
+                    class="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition peer-checked:translate-x-5"></span>
+                </span>
+                <span class="text-sm text-gray-700">Activar</span>
+              </label>
+            </div>
+
+            <div *ngIf="addForm.get('isParcialPayment')?.value" class="mt-5 space-y-4">
+
+              <!-- N + fechas base (opcional) -->
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+                <div>
+                  <label class="text-sm font-semibold text-gray-700">Cantidad de pagos (N)</label>
+                  <input type="number" min="2" max="60" formControlName="partialPaymentsCount" class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition
+               focus:outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+                </div>
+
+                <div>
+                  <label class="text-sm font-semibold text-gray-700">Válido desde (base)</label>
+                  <input type="date" formControlName="validFromPartial" class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition
+               focus:outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+                </div>
+
+                <div>
+                  <label class="text-sm font-semibold text-gray-700">Válido hasta (base)</label>
+                  <input type="date" formControlName="validToPartial" class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition
+               focus:outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+                </div>
+
+                <div class="flex items-end justify-end gap-3">
+                  <button type="button" (click)="autoDistributeAmounts()"
+                    class="rounded-xl px-4 py-3 text-sm font-semibold border border-gray-200 bg-white hover:bg-gray-50">
+                    Auto distribuir montos
+                  </button>
+                </div>
+              </div>
+
+              <!-- Totales -->
+              <div class="rounded-2xl bg-white border border-gray-200 p-4 flex items-center justify-between">
+                <div>
+                  <p class="text-xs text-gray-500">Total producto</p>
+                  <p class="text-lg font-bold text-gray-800">{{ priceValue }}</p>
+                  <p class="mt-1 text-xs text-gray-500">Pagos a crear: {{ partialPaymentsFA.length }}</p>
+                </div>
+
+                <div class="text-right">
+                  <p class="text-xs text-gray-500">Suma pagos</p>
+                  <p class="text-lg font-bold" [ngClass]="partialMatchesTotal ? 'text-emerald-700' : 'text-rose-700'">
+                    {{ partialPaymentsTotal }}
+                  </p>
+                  <p class="text-xs" [ngClass]="partialMatchesTotal ? 'text-emerald-700' : 'text-rose-700'">
+                    {{ partialMatchesTotal ? 'OK' : 'No coincide con el total' }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Tabla editable -->
+              <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+                <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                  <p class="text-sm font-semibold text-gray-800">Configura cada pago (N documentos)</p>
+                  <p class="text-xs text-gray-500">Edita Fecha Inicio / Fecha Fin / Monto</p>
+                </div>
+
+                <div class="overflow-x-auto">
+                  <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50 text-gray-600">
+                      <tr>
+                        <th class="px-4 py-3 text-left font-semibold">#</th>
+                        <th class="px-4 py-3 text-left font-semibold">Inicio</th>
+                        <th class="px-4 py-3 text-left font-semibold">Fin</th>
+                        <th class="px-4 py-3 text-right font-semibold">Monto</th>
+                      </tr>
+                    </thead>
+
+                    <tbody formArrayName="partialPayments">
+                      <tr *ngFor="let ctrl of partialPaymentsControls; let i = index" [formGroupName]="i"
+                        class="border-t">
+                        <td class="px-4 py-3">{{ i + 1 }}</td>
+
+                        <td class="px-4 py-3">
+                          <input type="date" formControlName="startsAt" class="w-full rounded-xl border border-gray-200 px-3 py-2 outline-none
+                       focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+                        </td>
+
+                        <td class="px-4 py-3">
+                          <input type="date" formControlName="endsAt" class="w-full rounded-xl border border-gray-200 px-3 py-2 outline-none
+                       focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+                        </td>
+
+                        <td class="px-4 py-3">
+                          <input type="number" step="0.01" min="0" formControlName="amount" class="w-full text-right rounded-xl border border-gray-200 px-3 py-2 outline-none
+                       focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+                        </td>
+                      </tr>
+
+                      <tr *ngIf="partialPaymentsFA.length === 0">
+                        <td colspan="4" class="px-4 py-6 text-center text-gray-500">
+                          Define N para generar filas.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Mensaje bloqueo -->
+              <div *ngIf="partialPaymentsFA.length && !partialMatchesTotal"
+                class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                La suma de los pagos debe ser exactamente igual al total del producto.
+              </div>
+            </div>
+          </div>
+
+
+          <!-- Descripción -->
+          <div class="md:col-span-2">
+            <label class="text-sm font-semibold text-gray-700">Descripción</label>
+            <textarea rows="4" formControlName="description" class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition
+                 focus:outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]"></textarea>
+          </div>
+
+          <!-- Fechas -->
+          <div>
+            <label class="text-sm font-semibold text-gray-700">Válido desde</label>
+            <input type="date" formControlName="validFrom" class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition
+                 focus:outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+          </div>
+
+          <div>
+            <label class="text-sm font-semibold text-gray-700">Válido hasta</label>
+            <input type="date" formControlName="validTo" class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition
+                 focus:outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+          </div>
+
+          <!-- Activo -->
+          <div class="flex items-center gap-2 md:col-span-2">
+            <input type="checkbox" formControlName="active" class="h-4 w-4 rounded border-gray-300 text-[#9db091]
+                 focus:outline-none focus:ring-2 focus:ring-[#9db091]/50">
+            <span class="text-sm text-gray-700">Activo</span>
+          </div>
+
+          <!-- Botones -->
+          <div class="md:col-span-2 flex justify-end gap-3">
+            <button type="button" class="rounded-xl px-5 py-3 font-semibold text-gray-700 hover:bg-gray-100"
+              (click)="setTab('active')">
+              Cancelar
+            </button>
+
+            <button type="submit"
+              [disabled]="addForm.invalid || saving || (addForm.get('isParcialPayment')?.value && !partialMatchesTotal)"
+              class="px-6 py-3 rounded-xl text-sm font-semibold transition
+                 bg-[#9db091] text-white hover:bg-[#8aa37f]
+                 disabled:bg-gray-300 disabled:text-gray-600 disabled:opacity-100 disabled:cursor-not-allowed
+                 focus:outline-none focus:ring-2 focus:ring-[#9db091]/50">
+              <span class="inline-block">
+                {{ saving ? 'Guardando...' : 'Guardar producto' }}
+              </span>
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+ <div *ngIf="isModalOpen && selected" class="fixed inset-0 z-50">
+  <div class="absolute inset-0 bg-black/50" (click)="closeModal()"></div>
+
+  <div class="absolute left-1/2 top-1/2 w-[96vw] max-w-6xl -translate-x-1/2 -translate-y-1/2">
+    <div class="rounded-2xl bg-white shadow-xl overflow-hidden max-h-[88vh] flex flex-col">
+
+      <!-- Header sticky -->
+      <div class="sticky top-0 z-10 bg-white border-b px-6 py-4 flex items-center justify-between">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900">Editar producto</h3>
+      
+        </div>
+        <button (click)="closeModal()" class="rounded-lg px-3 py-1.5 hover:bg-gray-100">✕</button>
+      </div>
+
+      <!-- Body scroll -->
+      <div class="flex-1 overflow-y-auto p-6">
+
+        <form class="space-y-6" [formGroup]="editForm" (ngSubmit)="saveEdit()">
+
+          <!-- Top grid: imagen pequeña + nombre/precio -->
+          <div class="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 items-start">
+            <div class="rounded-2xl border bg-gray-50 p-4">
+              <div class="aspect-square rounded-xl bg-white overflow-hidden border flex items-center justify-center">
+                <img [src]="selected.imageUrl" alt="Producto" class="h-full w-full object-contain" />
+              </div>
+
+              <label class="mt-3 block text-sm font-semibold text-gray-700">Cambiar imagen (opcional)</label>
+              <input type="file" accept="image/*" (change)="onEditFileChange($event)"
+                class="mt-2 block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-gray-800 file:px-3 file:py-2 file:text-white hover:file:bg-gray-900" />
+            </div>
+
+            <div class="space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="text-sm font-semibold text-gray-700">Nombre</label>
+                  <input formControlName="name"
+                    class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+                </div>
+
+                <div>
+                  <label class="text-sm font-semibold text-gray-700">Precio</label>
+                  <input type="number" formControlName="price"
+                    class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="text-sm font-semibold text-gray-700">Categoría</label>
+                  <select formControlName="category"
+                    class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]">
+                    <option value="" disabled>Selecciona una opción</option>
+                    <option value="permanente">Servicio de Transporte Ordinario</option>
+                    <option value="especial">Servicio Especial</option>
+                    <option value="producto">Producto</option>
+                    <option value="comedor">Comedor</option>
+                    <option value="seguridad">Seguridad</option>
+                    <option value="monitoreo">Monitoreo</option>
+                    <option value="limpieza">Limpieza</option>
+                    <option value="construccion">Construcción</option>
+                    <option value="bienesRaices">Bienes Raíces</option>
+                    <option value="mantenimiento">Mantenimiento</option>
+                    <option value="otros">Otros</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="text-sm font-semibold text-gray-700">Tipo</label>
+                  <input formControlName="type"
+                    class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="text-sm font-semibold text-gray-700">Desde</label>
+                  <input type="date" formControlName="validFrom"
+                    class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+                </div>
+                <div>
+                  <label class="text-sm font-semibold text-gray-700">Hasta</label>
+                  <input type="date" formControlName="validTo"
+                    class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+                </div>
+              </div>
+
+              <div>
+                <label class="text-sm font-semibold text-gray-700">Descripción</label>
+                <textarea rows="3" formControlName="description"
+                  class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]"></textarea>
+              </div>
+
+              <div class="flex items-center justify-between">
+                <label class="inline-flex items-center gap-2">
+                  <input type="checkbox" formControlName="active" class="h-4 w-4 rounded border-gray-300">
+                  <span class="text-sm text-gray-700">Activo</span>
+                </label>
+
+                <button type="button" (click)="toggleActiveSelected()"
+                  class="rounded-xl px-4 py-2 text-sm font-semibold hover:bg-gray-100">
+                  Cambiar estado
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pago parcial full width -->
+          <div class="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+            <div class="flex items-center justify-between gap-4">
+              <div>
+                <p class="text-sm font-semibold text-gray-800">Pago parcial</p>
+                <p class="text-xs text-gray-500">Edita periodos y montos. La suma debe coincidir con el precio.</p>
+              </div>
+
+              <label class="inline-flex cursor-pointer items-center gap-3">
+                <input type="checkbox" formControlName="isParcialPayment" class="peer sr-only">
+                <span class="relative h-6 w-11 rounded-full bg-gray-300 transition peer-checked:bg-[#9db091]">
+                  <span class="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition peer-checked:translate-x-5"></span>
+                </span>
+                <span class="text-sm text-gray-700">Activar</span>
+              </label>
+            </div>
+
+            <div *ngIf="editForm.get('isParcialPayment')?.value" class="mt-5 space-y-4">
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                  <label class="text-sm font-semibold text-gray-700">Cantidad de pagos (N)</label>
+                  <input type="number" min="2" max="60" formControlName="partialPaymentsCount"
+                    class="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+                </div>
+
+                <div>
+                  <label class="text-sm font-semibold text-gray-700">Monto base sugerido</label>
+                  <input type="number" formControlName="partialPaymentAmount" [disabled]="true"
+                    class="mt-2 w-full rounded-xl border border-gray-200 bg-gray-100 px-4 py-3 text-gray-700" />
+                </div>
+
+                <div class="flex md:justify-end">
+                  <button type="button" (click)="editAutoDistributeAmounts()"
+                    class="rounded-xl px-4 py-3 text-sm font-semibold border border-gray-200 bg-white hover:bg-gray-50">
+                    Auto distribuir montos
+                  </button>
+                </div>
+              </div>
+
+              <div class="rounded-2xl bg-white border border-gray-200 p-4 flex items-center justify-between">
+                <div>
+                  <p class="text-xs text-gray-500">Total producto</p>
+                  <p class="text-lg font-bold text-gray-800">{{ editPriceValue }}</p>
+                  <p class="mt-1 text-xs text-gray-500">Pagos: {{ editPartialPaymentsFA.length }}</p>
+                </div>
+
+                <div class="text-right">
+                  <p class="text-xs text-gray-500">Suma pagos</p>
+                  <p class="text-lg font-bold" [ngClass]="editPartialMatchesTotal ? 'text-emerald-700' : 'text-rose-700'">
+                    {{ editPartialPaymentsTotal }}
+                  </p>
+                  <p class="text-xs" [ngClass]="editPartialMatchesTotal ? 'text-emerald-700' : 'text-rose-700'">
+                    {{ editPartialMatchesTotal ? 'OK' : 'No coincide con el total' }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+                <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                  <p class="text-sm font-semibold text-gray-800">Pagos parciales</p>
+                  <p class="text-xs text-gray-500">Edita inicio / fin / monto</p>
+                </div>
+
+                <div class="overflow-x-auto">
+                  <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50 text-gray-600">
+                      <tr>
+                        <th class="px-4 py-3 text-left font-semibold">#</th>
+                        <th class="px-4 py-3 text-left font-semibold">Inicio</th>
+                        <th class="px-4 py-3 text-left font-semibold">Fin</th>
+                        <th class="px-4 py-3 text-right font-semibold">Monto</th>
+                      </tr>
+                    </thead>
+
+                    <tbody formArrayName="partialPayments">
+                      <tr *ngFor="let ctrl of editPartialPaymentsControls; let i = index"
+                          [formGroupName]="i" class="border-t">
+                        <td class="px-4 py-3">{{ i + 1 }}</td>
+
+                        <td class="px-4 py-3">
+                          <input type="date" formControlName="startsAt"
+                            class="w-full rounded-xl border border-gray-200 px-3 py-2 outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+                        </td>
+
+                        <td class="px-4 py-3">
+                          <input type="date" formControlName="endsAt"
+                            class="w-full rounded-xl border border-gray-200 px-3 py-2 outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+                        </td>
+
+                        <td class="px-4 py-3">
+                          <input type="number" step="0.01" min="0" formControlName="amount"
+                            class="w-full text-right rounded-xl border border-gray-200 px-3 py-2 outline-none focus:ring-2 focus:ring-[#9db091]/50 focus:border-[#9db091]" />
+                        </td>
+                      </tr>
+
+                      <tr *ngIf="editPartialPaymentsFA.length === 0">
+                        <td colspan="4" class="px-4 py-6 text-center text-gray-500">
+                          Define N para generar filas.
+                        </td>
+                      </tr>
+                    </tbody>
+
+                  </table>
+                </div>
+              </div>
+
+              <div *ngIf="editPartialPaymentsFA.length && !editPartialMatchesTotal"
+                class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                La suma de los pagos debe ser exactamente igual al total del producto.
+              </div>
+
+            </div>
+          </div>
+
+          <!-- (opcional) más campos aquí -->
+        </form>
+      </div>
+
+      <!-- Footer sticky -->
+      <div class="sticky bottom-0 z-10 bg-white border-t px-6 py-4 flex justify-end gap-3">
+        <button type="button" (click)="closeModal()"
+          class="rounded-xl px-5 py-2 font-semibold text-gray-700 hover:bg-gray-100">
+          Cerrar
+        </button>
+
+        <button type="button" (click)="saveEdit()"
+          [disabled]="saving || (editForm.get('isParcialPayment')?.value && !editPartialMatchesTotal)"
+          class="rounded-xl bg-[#9db091] px-6 py-2 font-semibold text-white hover:bg-[#8aa37f] disabled:opacity-50">
+          {{ saving ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+</div>

@@ -202,3 +202,23 @@ html {
     background: rgba(0, 0, 0, 0.35);
   }
 }
+
+.html2canvas-safe #credencial,
+.html2canvas-safe #credencial * {
+  /* fuerza colores simples */
+  color: #111 !important;
+  border-color: #111 !important;
+
+  /* evita sombras/filters que a veces usan oklch */
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+
+  /* importante: elimina variables tailwind que puedan ser oklch */
+  --tw-shadow: 0 0 #0000 !important;
+}
+
+/* Si tu fondo usa clases Tailwind tipo bg-slate-100, aquí lo forzamos */
+.html2canvas-safe #credencial {
+  background: #f1f5f9 !important; /* slate-100 en hex */
+}

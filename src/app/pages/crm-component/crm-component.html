@@ -1,1 +1,272 @@
-<p>crm-component works!</p>
+<div class="max-w-6xl mx-auto p-4">
+
+    <form [formGroup]="objectForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+        <!-- Header card -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex items-center gap-4">
+                    <!-- Avatar -->
+                    <div class="relative">
+                        <img class="h-20 w-20 rounded-full object-cover ring-2 ring-slate-100"
+                            [src]="avatarPreviewUrl || record?.imageUrl || fallbackAvatar" alt="Avatar" />
+                        <div *ngIf="uploading"
+                            class="absolute inset-0 rounded-full bg-white/70 flex items-center justify-center">
+                            <span class="text-xs text-slate-700 font-medium">{{ (uploadvalue * 100) | number:'1.0-0'
+                                }}%</span>
+                        </div>
+                    </div>
+
+                    <!-- Info -->
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-900">{{ record?.name }}</h2>
+                        <p class="text-sm text-slate-600 leading-5">
+                            {{ record?.address }} <br />
+                            {{ record?.address2 }} {{ record?.address3 }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-2">
+                    <label class="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium
+                   bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 cursor-pointer
+                   disabled:opacity-60 disabled:cursor-not-allowed" [class.opacity-60]="uploading">
+                        <input type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)"
+                            [disabled]="uploading" />
+                        Cambiar imagen
+                    </label>
+
+                    <button type="submit" class="rounded-xl px-4 py-2 text-sm font-medium border border-slate-300
+                   hover:bg-slate-50 active:bg-slate-100" [disabled]="loading || objectForm.invalid || uploading">
+                        Guardar Cambios
+                    </button>
+                </div>
+            </div>
+
+            <div *ngIf="loading" class="px-5 pb-5">
+                <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-2 w-1/3 bg-slate-300 animate-pulse"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información Básica -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold text-slate-900">Información Básica</h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Nombre -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Nombre</label>
+                    <input type="text" formControlName="name" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+                    <p *ngIf="objectForm.get('name')?.touched && objectForm.get('name')?.invalid"
+                        class="text-xs text-red-600 mt-1">
+                        El nombre es requerido.
+                    </p>
+                </div>
+
+                <!-- Razón Social -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Razón Social</label>
+                    <input type="text" formControlName="socialName" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <!-- RFC -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">RFC</label>
+                    <input type="text" formControlName="rfc" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+                </div>
+
+                <!-- Giro -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Giro</label>
+                    <select formControlName="jobTypeID" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white
+         focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        <option value="">Selecciona el Giro de la Empresa</option>
+                        <option *ngFor="let o of jobType" [value]="o.uid">{{ o.name }}</option>
+                    </select>
+                </div>
+
+                <!-- Consecutivo -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Consecutivo</label>
+                    <input type="text" formControlName="custConsecutive" [disabled]="true"
+                        class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-slate-50 text-slate-600" />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Teléfono</label>
+                    <input type="text" formControlName="phoneNumber" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Sitio Web</label>
+                    <input type="text" formControlName="website" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Persona Contacto</label>
+                    <input type="text" formControlName="primaryContact" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Responsable</label>
+                    <select formControlName="responsableUser" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        <option value="">Selecciona Usuario Responsable</option>
+                        <option *ngFor="let u of usersList" [value]="u.uid">{{ u.displayName }}</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dirección -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+            <h3 class="text-base font-semibold text-slate-900 mb-4">Dirección</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div class="md:col-span-9">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Calle</label>
+                    <input type="text" formControlName="address" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+                </div>
+
+                <div class="md:col-span-3">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Número</label>
+                    <input type="text" formControlName="addressNumber" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+                </div>
+
+                <div class="md:col-span-6">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Entre Calles</label>
+                    <input type="text" formControlName="address2" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+                </div>
+
+                <div class="md:col-span-6">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Fracc / Colonia</label>
+                    <input type="text" formControlName="address3" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Código Postal</label>
+                    <input type="text" formControlName="zip" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+                </div>
+
+                <div class="md:col-span-5">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Ciudad / Municipio</label>
+                    <input type="text" formControlName="city" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+                </div>
+
+                <div class="md:col-span-5">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Estado</label>
+                    <input type="text" formControlName="state" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+                </div>
+            </div>
+        </section>
+
+        <!-- Parámetros de Servicio -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+            <h3 class="text-base font-semibold text-slate-900 mb-4">Parámetros de Servicio</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- paymentResponsible -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">
+                        Origen de los pagos
+                        <span class="text-xs text-slate-500">(responsable de emitir el pago)</span>
+                    </label>
+                    <select formControlName="paymentResponsible" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        <option [value]="0">Empresa</option>
+                        <option [value]="1">Usuario</option>
+                    </select>
+                </div>
+
+                <!-- forceStopPoints -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">
+                        Obligatorio subir en la estación definida
+                    </label>
+                    <select formControlName="forceStopPoints" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        <option [ngValue]="true">Sí</option>
+                        <option [ngValue]="false">No</option>
+                    </select>
+                </div>
+
+                <!-- forceRound -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">
+                        Obligatorio subir en el turno definido
+                    </label>
+                    <select formControlName="forceRound" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        <option [ngValue]="true">Sí</option>
+                        <option [ngValue]="false">No</option>
+                    </select>
+                </div>
+
+                <!-- forceRoute -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">
+                        Obligatorio subir en la operación definida
+                    </label>
+                    <select formControlName="forceRoute" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white
+                   focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        <option [ngValue]="true">Sí</option>
+                        <option [ngValue]="false">No</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold text-slate-900">Métodos de Pago</h3>            
+            </div>
+
+            <ng-container >
+                <div *ngIf="paymentMethods.length === 0" class="text-sm text-slate-500">
+                    No hay métodos de pago registrados.
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" *ngIf="paymentMethods.length > 0">
+                    <div *ngFor="let pm of paymentMethods"
+                        class="flex items-center justify-between rounded-xl border border-slate-200 p-4">
+                        <div>
+                            <p class="font-medium text-slate-900">{{ pm.name }}</p>                           
+                        </div>
+
+                        <!-- Toggle -->
+                        <button type="button" (click)="onTogglePaymentMethod(pm)"
+                            class="relative inline-flex h-6 w-11 items-center rounded-full transition"
+                            [class.bg-emerald-500]="pm.active" [class.bg-slate-300]="!pm.active"
+                            aria-label="Activar/Desactivar método de pago">
+                            <span class="inline-block h-5 w-5 transform rounded-full bg-white transition"
+                                [class.translate-x-5]="pm.active" [class.translate-x-1]="!pm.active"></span>
+                        </button>
+                    </div>
+                </div>
+            </ng-container>          
+        </section>
+
+    </form>
+</div>

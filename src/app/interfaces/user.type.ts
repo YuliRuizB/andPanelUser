@@ -31,6 +31,7 @@ export interface User1 {
 
   // rutas
   defaultRoute?: string;
+  defaultRouteName?: string;
 
   // multi-tenant
   customerId?: string;
@@ -44,6 +45,7 @@ export interface User1 {
   paymentId?: string;
   defaultRound?: string;
   round?: string;
+  token?: string;
 }
 
    export enum Role {
