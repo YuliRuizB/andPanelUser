@@ -69,7 +69,7 @@
                         <th class="px-6 py-3 font-semibold">Vigencia</th>
                         <th class="px-6 py-3 font-semibold">Estatus</th>
                         <th *ngIf="tab === 'parcialidades'" class="px-6 py-3 font-semibold text-right">Monto</th>
-                        <th *ngIf="tab === 'parcialidades'" class="px-6 py-3 font-semibold text-right">Abono</th>                       
+                        <th *ngIf="tab === 'parcialidades'" class="px-6 py-3 font-semibold text-right">Abono</th>
                         <th class="px-6 py-3 font-semibold text-right">...</th>
                     </tr>
                 </thead>
@@ -176,10 +176,10 @@
                             <td class="px-6 py-4 text-right font-semibold text-slate-700">
                                 {{ amountPaymentAsNumber(p) | currency:p.currency:'symbol' }}
                             </td>
-                         
+
                             <td class="px-6 py-4 text-right">
                                 <button type="button" class="h-9 w-9 inline-flex items-center justify-center rounded-xl
-           bg-slate-900 text-white hover:bg-slate-800 transition" (click)="toggleRowMenu(p)">
+         text-slate-600 hover:bg-slate-100 transition" (click)="toggleRowMenu(p)">
                                     ⋯
                                 </button>
 
@@ -280,15 +280,19 @@
                 <!-- estado -->
                 <div class="flex items-center justify-between gap-3 mb-4">
                     <div class="text-sm text-slate-700">
-                        <span class="font-semibold">{{ partialPayments.length }}</span> generado(s) ·
-                        <span class="font-semibold">{{ selectedPurchase?.partialPaymentsCount ?? 0 }}</span> total
+                        Parcialidades Cubiertas <span class="font-semibold">{{ generatedPartialPaymentsCount }}</span>
+                        <span class="text-slate-500">·</span>
+                        Parcialidades Faltantes <span class="font-semibold">{{ availablePartialPayments.length }}</span>
+                        <span class="text-slate-500">·</span>
+                        Total de Parcialidades <span class="font-semibold">{{ partialPayments.length }}</span>
                     </div>
 
                     <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border"
                         [ngClass]="availablePartialPayments.length
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                  : 'bg-slate-100 text-slate-600 border-slate-200'">
-                        {{ availablePartialPayments.length ? 'Disponible' : 'Sin pendientes' }}
+    ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+    : 'bg-slate-100 text-slate-600 border-slate-200'">
+                        {{ availablePartialPayments.length ? ('Pendientes: ' + availablePartialPayments.length) : 'Sin
+                        pendientes' }}
                     </span>
                 </div>
 
@@ -360,6 +364,154 @@
                     [disabled]="!availablePartialPayments.length || !selectedAvailablePaymentId"
                     (click)="confirmAddPartialPaymentModal()">
                     Aceptar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- ========== MODAL: Usuario Información ========== -->
+<div *ngIf="showUserInfoModal" class="fixed inset-0 z-50">
+    <!-- overlay -->
+    <div class="absolute inset-0 bg-black/40" (click)="closeUserInfoModal()"></div>
+
+    <!-- modal -->
+    <div class="relative min-h-full flex items-center justify-center p-4">
+        <div class="w-full max-w-xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+
+            <!-- header -->
+            <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/60">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <div class="text-base font-semibold text-slate-900">Información del usuario</div>
+                    </div>
+
+                    <button type="button"
+                        class="h-9 w-9 grid place-items-center rounded-xl hover:bg-slate-100 text-slate-600"
+                        (click)="closeUserInfoModal()">
+                        ✕
+                    </button>
+                </div>
+            </div>
+
+            <!-- body -->
+            <div class="px-6 py-5" *ngIf="selectedUserInfo as u">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                    <div class="rounded-xl border border-slate-200 p-3">
+                        <div class="text-xs text-slate-500">Username</div>
+                        <div class="text-sm font-semibold text-slate-900 mt-1">{{ u.username || '—' }}</div>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 p-3">
+                        <div class="text-xs text-slate-500">Matricula</div>
+                        <div class="text-sm font-semibold text-slate-900 mt-1">{{ u.studentId || '—' }}</div>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 p-3">
+                        <div class="text-xs text-slate-500">Nombre</div>
+                        <div class="text-sm font-semibold text-slate-900 mt-1">{{ u.firstName || '—' }}</div>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 p-3">
+                        <div class="text-xs text-slate-500">Apellido</div>
+                        <div class="text-sm font-semibold text-slate-900 mt-1">{{ u.lastName || '—' }}</div>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 p-3 sm:col-span-2">
+                        <div class="text-xs text-slate-500">Display name</div>
+                        <div class="text-sm font-semibold text-slate-900 mt-1">{{ u.displayName || '—' }}</div>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 p-3 sm:col-span-2">
+                        <div class="text-xs text-slate-500">Email</div>
+                        <div class="text-sm font-semibold text-slate-900 mt-1">{{ u.email || '—' }}</div>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 p-3 sm:col-span-2">
+                        <div class="text-xs text-slate-500">Teléfono</div>
+                        <div class="text-sm font-semibold text-slate-900 mt-1">{{ u.phoneNumber || '—' }}</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- footer -->
+            <div class="px-6 py-4 border-t border-slate-200 bg-white flex items-center justify-end">
+                <button type="button"
+                    class="px-4 py-2 rounded-xl border border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
+                    (click)="closeUserInfoModal()">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ========== MODAL: Mensajes ========== -->
+<div *ngIf="showMessageUserModal" class="fixed inset-0 z-50">
+    <!-- overlay -->
+    <div class="absolute inset-0 bg-black/40" (click)="closeMessageUserModal()"></div>
+
+    <!-- modal -->
+    <div class="relative min-h-full flex items-center justify-center p-4">
+        <div class="w-full max-w-xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+
+            <!-- header -->
+            <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/60">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <div class="text-base font-semibold text-slate-900">Enviar mensaje</div>
+                        <div class="text-xs text-slate-500 mt-1">
+                            A: <span class="font-semibold text-slate-700">{{ messageTarget?.displayName || 'Usuario'
+                                }}</span>
+                        </div>
+                    </div>
+
+                    <button type="button"
+                        class="h-9 w-9 grid place-items-center rounded-xl hover:bg-slate-100 text-slate-600"
+                        (click)="closeMessageUserModal()">
+                        ✕
+                    </button>
+                </div>
+            </div>
+
+            <!-- body -->
+            <div class="px-6 py-5 space-y-4">
+                <div>
+                    <label class="text-xs font-medium text-slate-500">Título</label>
+                    <input class="mt-2 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-[#235000]/30 focus:border-[#235000]/60"
+                        [(ngModel)]="messageForm.title" placeholder="Ej. Aviso importante" />
+                </div>
+
+                <div>
+                    <label class="text-xs font-medium text-slate-500">Descripción</label>
+                    <textarea rows="4" class="mt-2 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-[#235000]/30 focus:border-[#235000]/60"
+                        [(ngModel)]="messageForm.description"
+                        placeholder="Escribe el mensaje que verá el usuario..."></textarea>
+                </div>
+
+                <div class="text-xs text-slate-500">
+                    Se enviará como notificación push al dispositivo del usuario.
+                </div>
+            </div>
+
+            <!-- footer -->
+            <div class="px-6 py-4 border-t border-slate-200 bg-white flex items-center justify-end gap-2">
+                <button type="button"
+                    class="px-4 py-2 rounded-xl border border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
+                    (click)="closeMessageUserModal()" [disabled]="isSendingMessage">
+                    Cancelar
+                </button>
+
+                <button type="button"
+                    class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                    [disabled]="isSendingMessage || !messageForm.title.trim() || !messageForm.description.trim()"
+                    (click)="sendMessageUserModal()">
+                    {{ isSendingMessage ? 'Enviando…' : 'Enviar' }}
                 </button>
             </div>
 

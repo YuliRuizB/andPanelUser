@@ -59,7 +59,27 @@ export class BoardingPassComponent {
 
   partialPayments: any[] = [];          // tipa con tu PartialPayment si ya lo tienes
   availablePartialPayments: any[] = [];
+  generatedPartialPaymentsCount = 0;
+  showUserInfoModal = false;
 
+  selectedUserInfo: {
+    username?: string;
+    studentId?: number | string;
+    firstName?: string;
+    lastName?: string;
+    displayName?: string;
+    email?: string;
+    phoneNumber?: string;
+  } | null = null;
+
+  showMessageUserModal = false;
+  isSendingMessage = false;
+  messageTarget: { uid?: string; displayName?: string; token?: string } | null = null;
+  messageForm = {
+    title: '',
+    description: '',
+  };
+  readonly myUid = 'FyXKSXsUbYNtAbWL7zZ66o2f1M92';
 
   constructor(private notification: ToastService,) {
 
@@ -100,25 +120,19 @@ export class BoardingPassComponent {
 
     this.loading = true;
     this.errorMsg = '';
-    this.cdr.detectChanges();
 
-    // ✅ Solo activos (para "Todos" y para "Parcialidades")
     this.userService.getBoardingPassesByCustomerId(this.customerId, true).subscribe({
       next: (rows: any[]) => {
-        console.log('Pases cargados:', rows);
-
         this.ngZone.run(() => {
           const normalized = (rows || []).map((p: any) => this.normalizePass(p));
 
-          // TODOS ACTIVOS
           this.allActive = normalized;
-
-          // PARCIALIDADES: activos + isParcialPayment true
           this.partialActive = normalized.filter((x) => x.isParcialPayment === true);
 
           this.applyFilters();
           this.loading = false;
-          this.cdr.detectChanges();
+
+          this.cdr.markForCheck(); // ✅
         });
       },
       error: (err) => {
@@ -129,7 +143,8 @@ export class BoardingPassComponent {
           this.applyFilters();
           this.loading = false;
           this.errorMsg = 'No se pudieron cargar los pases.';
-          this.cdr.detectChanges();
+
+          this.cdr.markForCheck(); // ✅
         });
       },
     });
@@ -138,11 +153,13 @@ export class BoardingPassComponent {
   private normalizePass(raw: any): IBoardingPassEx {
     return {
       ...(raw as IBoardingPass),
+      name: raw?.name ?? '',
+      routeName: raw?.routeName ?? '',
+      status: raw?.status ?? '',
       currency: raw?.currency || 'MXN',
       isParcialPayment: raw?.isParcialPayment === true,
     };
   }
-
 
   applyFilters(): void {
     const q = (this.filterForm.value.q || '').trim().toLowerCase();
@@ -162,7 +179,7 @@ export class BoardingPassComponent {
     const sortByValidTo = (a: any, b: any) => {
       const da = this.toJsDate(a.validTo)?.getTime() || 0;
       const db = this.toJsDate(b.validTo)?.getTime() || 0;
-      return da - db; // 👈 ascendente (vence primero arriba)
+      return da - db;
     };
 
     this.activeFiltered.sort(sortByValidTo);
@@ -171,6 +188,7 @@ export class BoardingPassComponent {
     this.cdr.detectChanges();
     this.currentPageActivos = 1;
     this.currentPageParciales = 1;
+    this.cdr.markForCheck();
   }
 
   // helpers
@@ -200,8 +218,6 @@ export class BoardingPassComponent {
     if (p.status === 'completed') return 'Pagado';
     return 'Pago Parcial';
   }
-
-
 
   amountPaymentAsNumber(p: IBoardingPassEx): number {
     const v: any = (p as any)?.amountPayment;
@@ -320,24 +336,23 @@ export class BoardingPassComponent {
     this.openedRowMenu = null;
 
     try {
-      console.log('Cargando parcialidades para', p);
-      console.log(p.uid, p.idBoardingPass);
-      
-      
-      // 1) pagos ya generados (subcolección)
+
       this.partialPayments = await firstValueFrom(
         this.productsService.getPartialPayments(p.customerId, p.product_id)
       );
-      console.log( this.partialPayments.length, 'parcialidades ya generadas:', this.partialPayments);
-      
-      // 2) plan total (del pase)
-      const plan = (p.partialPaymentsPlan || []) as any[];
+      const partialPaymentsofProduct =
+        await this.productsService.getPartialPaymentDetails(p.uid, p.idBoardingPass);
 
-      // 3) disponibles = plan - generados
-      const generatedIds = new Set(this.partialPayments.map(x => x.id));
-      this.availablePartialPayments = plan.filter(x => !generatedIds.has(x.id));
-      console.log('Parcialidades disponibles:', this.availablePartialPayments);
+      this.generatedPartialPaymentsCount = partialPaymentsofProduct.length;
+      const generatedNumbers = new Set(
+        partialPaymentsofProduct.map(x => x.paymentNumber)
+      );
+
+      this.availablePartialPayments =
+        this.partialPayments.filter(x => !generatedNumbers.has(x.paymentNumber));
+
       this.showAddPartialPaymentModal = true;
+      this.cdr.detectChanges();
     } catch (e) {
       console.error(e);
       this.notification.error('No se pudieron cargar las parcialidades.', 'And Informa');
@@ -353,17 +368,119 @@ export class BoardingPassComponent {
   }
 
   openMessageUser(p: any) {
-    this.openedRowMenu = null;
+    const u = p?.user;
+    if (!u?.uid) {
+      this.notification.error('Este registro no trae uid del usuario.', 'And Informa');
+      return;
+    }
 
-    console.log('Mensaje a usuario', p.user);
-    // aquí abres modal de chat o navegas
+    this.messageTarget = u;
+    this.messageForm = { title: '', description: '' };
+
+    setTimeout(() => {
+      this.showMessageUserModal = true;
+      this.cdr.markForCheck();
+    }, 0);
+  }
+
+
+  closeMessageUserModal() {
+    setTimeout(() => {
+      this.showMessageUserModal = false;
+      this.isSendingMessage = false;
+      this.messageTarget = null;
+      this.messageForm = { title: '', description: '' };
+      this.cdr.markForCheck();
+    }, 0);
+  }
+
+  async sendMessageUserModal() {
+    if (!this.messageTarget?.uid) {
+      this.notification.error('Selecciona un usuario para enviar mensajes', 'And Informa');
+      return;
+    }
+
+    const title = this.messageForm.title.trim();
+    const msg = this.messageForm.description.trim();
+
+    if (!title || !msg) {
+      this.notification.warning('Completa título y descripción.', 'And Informa');
+      return;
+    }
+
+    try {
+      this.isSendingMessage = true;
+
+      const requestId = 'suhB7YFAh6PYXCRuJhfD'; // si lo tienes dinámico, mejor
+
+      // 1) Mensaje de chat (tu estructura)
+      const dataMessage = {
+        createdAt: new Date(),
+        from: this.myUid,
+        fromName: 'Apps And Informa',
+        msg,                 // <-- descripción
+        title,               // <-- NUEVO (si tu backend lo guarda)
+        requestId,
+        token: this.messageTarget.token ?? '',
+        uid: this.messageTarget.uid,
+        result: ''
+      };
+
+      // 2) Notificación push (tu estructura)
+      const notifMessage = {
+        timestamp: new Date(),
+        title,               // <-- título del modal
+        from: this.myUid,
+        requestId,
+        body: msg,           // <-- descripción
+        token: this.messageTarget.token ?? '',
+        uid: this.messageTarget.uid
+      };
+
+      // Si NO hay token, puedes solo mandar chat
+      if (this.messageTarget.token) {
+        this.userService.setMessage(notifMessage, this.messageTarget.uid);
+      }
+
+      await this.userService.setChatMessage(dataMessage);
+
+      this.notification.success('Mensaje enviado.', 'And Informa');
+      this.closeMessageUserModal();
+    } catch (e) {
+      console.error(e);
+      this.notification.error('No se pudo enviar el mensaje.', 'And Informa');
+    } finally {
+      this.isSendingMessage = false;
+      this.cdr.markForCheck();
+    }
   }
 
   openUserInfo(p: any) {
-    this.openedRowMenu = null;
+    try {
 
-    console.log('Info usuario', p.user);
-    // aquí abres modal de info
+      const c = p?.user || {};
+
+      this.selectedUserInfo = {
+        username: c.username ?? c.name ?? '',
+        studentId: c.studentId ?? '',
+        firstName: c.firstName ?? '',
+        lastName: c.last_name ?? c.lastName ?? '',
+        displayName: c.displayName ?? c.name ?? '',
+        email: c.email ?? '',
+        phoneNumber: c.phone_number ?? c.phoneNumber ?? '',
+      };
+
+      this.showUserInfoModal = true;
+      this.cdr.detectChanges();
+    } catch (e) {
+      console.error(e);
+      this.notification.error('No se pudo cargar la información del usuario.', 'And Informa');
+    }
+  }
+
+  closeUserInfoModal() {
+    this.showUserInfoModal = false;
+    this.selectedUserInfo = null;
   }
 
   async confirmAddPartialPaymentModal() {

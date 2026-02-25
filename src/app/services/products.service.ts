@@ -316,8 +316,10 @@ export class ProductsService {
   }
 
   async deletePartialPaymentDetail(uid: string, idBoardingPass: string, partialPaymentId: string) {
+    console.log(`Borrando parcial ${partialPaymentId} del pase ${idBoardingPass} del usuario ${uid}`);
+    
     const ref = doc(this.firestore,
-      `users/${uid}/boardingPasses/${idBoardingPass}/partialPayments/${partialPaymentId}`
+      `users/${uid}/boardingPasses/${idBoardingPass}/partialPaymentDetail/${partialPaymentId}`
     );
     return deleteDoc(ref);
   }

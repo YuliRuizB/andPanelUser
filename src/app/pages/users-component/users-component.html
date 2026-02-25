@@ -1514,15 +1514,18 @@
                 <!-- estado -->
                 <div class="flex items-center justify-between gap-3 mb-4">
                     <div class="text-sm text-slate-700">
-                        <span class="font-semibold">{{ partialPayments.length }}</span> generado(s) ·
-                        <span class="font-semibold">{{ selectedPurchase?.partialPaymentsCount ?? 0 }}</span> total
+                          <span class="text-slate-500">·</span>
+                        Parcialidades Faltantes <span class="font-semibold">{{ availablePartialPayments.length }}</span>                      
+                           <span class="text-slate-500">·</span>
+                        Parcialidades Cubiertas<span class="font-semibold">{{ partialPayments.length }}</span>
                     </div>
 
                     <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border"
                         [ngClass]="availablePartialPayments.length
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                  : 'bg-slate-100 text-slate-600 border-slate-200'">
-                        {{ availablePartialPayments.length ? 'Disponible' : 'Sin pendientes' }}
+    ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+    : 'bg-slate-100 text-slate-600 border-slate-200'">
+                        {{ availablePartialPayments.length ? ('Pendientes: ' + availablePartialPayments.length) : 'Sin
+                        pendientes' }}
                     </span>
                 </div>
 
