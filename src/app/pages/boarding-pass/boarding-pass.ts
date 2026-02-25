@@ -30,16 +30,13 @@ export class BoardingPassComponent {
   private userService = inject(userService);
   private ngZone = inject(NgZone);
   private productsService = inject(ProductsService);
-  // filtros simples (por ahora solo texto)
   filterForm = this.fb.group({
     q: [''],
   });
 
-  // Data
   loading = false;
   errorMsg = '';
   tab: 'activos' | 'parcialidades' = 'activos';
-  // "Todos" (activos)
   customerId = '';
   allActive: IBoardingPassEx[] = [];
   activeFiltered: IBoardingPassEx[] = [];
@@ -57,7 +54,7 @@ export class BoardingPassComponent {
   selectedAvailablePaymentId = '';
   openedRowMenu: string | null = null;
 
-  partialPayments: any[] = [];          // tipa con tu PartialPayment si ya lo tienes
+  partialPayments: any[] = [];        
   availablePartialPayments: any[] = [];
   generatedPartialPaymentsCount = 0;
   showUserInfoModal = false;
@@ -80,7 +77,6 @@ export class BoardingPassComponent {
     description: '',
   };
   readonly myUid = 'FyXKSXsUbYNtAbWL7zZ66o2f1M92';
-
   constructor(private notification: ToastService,) {
 
   }
@@ -97,14 +93,11 @@ export class BoardingPassComponent {
         this.loadBoardingPasses();
       });
 
-    // 2) filtros reactivos
     this.filterForm.valueChanges.subscribe(() => this.applyFilters());
   }
 
   setTab(t: 'activos' | 'parcialidades') {
     this.tab = t;
-
-    // opcional: al cambiar tab, volver a página 1 de ese tab
     if (t === 'activos') this.currentPageActivos = 1;
     else this.currentPageParciales = 1;
 
@@ -132,7 +125,7 @@ export class BoardingPassComponent {
           this.applyFilters();
           this.loading = false;
 
-          this.cdr.markForCheck(); // ✅
+          this.cdr.markForCheck(); 
         });
       },
       error: (err) => {
@@ -144,7 +137,7 @@ export class BoardingPassComponent {
           this.loading = false;
           this.errorMsg = 'No se pudieron cargar los pases.';
 
-          this.cdr.markForCheck(); // ✅
+          this.cdr.markForCheck(); 
         });
       },
     });
@@ -191,11 +184,10 @@ export class BoardingPassComponent {
     this.cdr.markForCheck();
   }
 
-  // helpers
   toJsDate(v: any): Date | null {
     if (!v) return null;
     if (v instanceof Date) return v;
-    if (typeof v?.toDate === 'function') return v.toDate(); // Firestore Timestamp
+    if (typeof v?.toDate === 'function') return v.toDate(); 
     const d = new Date(v);
     return isNaN(d.getTime()) ? null : d;
   }
@@ -213,7 +205,6 @@ export class BoardingPassComponent {
   }
 
   statusLabel(p: IBoardingPassEx): string {
-    // tu UI actual: completed => Pagado, else => Pago Parcial
     if (p.status === 'completed' && p.is_courtesy) return 'Cortesía';
     if (p.status === 'completed') return 'Pagado';
     return 'Pago Parcial';
@@ -411,33 +402,30 @@ export class BoardingPassComponent {
     try {
       this.isSendingMessage = true;
 
-      const requestId = 'suhB7YFAh6PYXCRuJhfD'; // si lo tienes dinámico, mejor
+      const requestId = 'suhB7YFAh6PYXCRuJhfD'; 
 
-      // 1) Mensaje de chat (tu estructura)
       const dataMessage = {
         createdAt: new Date(),
         from: this.myUid,
         fromName: 'Apps And Informa',
-        msg,                 // <-- descripción
-        title,               // <-- NUEVO (si tu backend lo guarda)
+        msg,                
+        title,              
         requestId,
         token: this.messageTarget.token ?? '',
         uid: this.messageTarget.uid,
         result: ''
       };
 
-      // 2) Notificación push (tu estructura)
       const notifMessage = {
         timestamp: new Date(),
-        title,               // <-- título del modal
+        title,              
         from: this.myUid,
         requestId,
-        body: msg,           // <-- descripción
+        body: msg,          
         token: this.messageTarget.token ?? '',
         uid: this.messageTarget.uid
       };
 
-      // Si NO hay token, puedes solo mandar chat
       if (this.messageTarget.token) {
         this.userService.setMessage(notifMessage, this.messageTarget.uid);
       }
@@ -499,7 +487,6 @@ export class BoardingPassComponent {
     try {
       const addAmount = this.toNumber(chosen.amount);
 
-      // ✅ Registro para subcolección (tu tabla lo espera así)
       const newPartialPayment = {
         id: chosen.id,
         active: true,
@@ -516,7 +503,6 @@ export class BoardingPassComponent {
         newPartialPayment
       );
 
-      // ✅ Update boarding pass
       const newAmount = this.toNumber(purchase.amount) + addAmount;
       const newAmountPayment = this.toNumber(purchase.amountPayment) + addAmount;
       const newPartialPaymentAmount = this.toNumber(purchase.partialPaymentAmount) + addAmount;
@@ -532,14 +518,10 @@ export class BoardingPassComponent {
         partialPaymentAmountSelected: addAmount,
       });
 
-      // ✅ Actualiza tabla del modal
       this.partialPayments = [...this.partialPayments, newPartialPayment];
 
-      // ✅ Quita de disponibles
       this.availablePartialPayments = this.availablePartialPayments.filter(p => p.id !== chosen.id);
       this.selectedAvailablePaymentId = '';
-
-      // ✅ Actualiza selectedPurchase (para que el reporte se refresque)
       this.selectedPurchase = {
         ...purchase,
         amount: newAmount,
@@ -551,7 +533,6 @@ export class BoardingPassComponent {
         partialPaymentAmountSelected: addAmount,
       };
 
-      // ✅ Refresca la fila en el reporte
       const updated = this.selectedPurchase as any;
 
       this.allActive = this.allActive.map(x =>
