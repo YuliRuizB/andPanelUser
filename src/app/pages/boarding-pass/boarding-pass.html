@@ -38,6 +38,14 @@
                     (click)="setTab('parcialidades')">
                     Parcialidades ({{ partialFiltered.length }})
                 </button>
+                <button type="button"
+                    class="px-5 py-2 rounded-full border text-sm font-semibold transition-colors duration-200"
+                    [ngClass]="tab === 'inactivos'
+    ? 'bg-[#235000] text-white border-[#235000]'
+    : 'border-slate-300 text-slate-600 hover:bg-[#235000] hover:text-white hover:border-[#235000]'"
+                    (click)="setTab('inactivos')">
+                    Inactivos ({{ inactiveFiltered.length }})
+                </button>
             </div>
 
             <!-- Search -->
@@ -96,6 +104,12 @@
                             No hay pases activos con parcialidades.
                         </td>
                     </tr>
+                    <tr *ngIf="!loading && tab === 'inactivos' && inactiveFiltered.length === 0">
+                        <td colspan="6" class="px-6 py-8 text-center text-slate-500">
+                            No hay pases inactivos.
+                        </td>
+                    </tr>
+
 
                     <!-- ROWS: ACTIVOS -->
                     <ng-container *ngIf="!loading && tab === 'activos'">
@@ -130,8 +144,45 @@
                                     {{ statusLabel(p) }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-right font-semibold text-slate-700">
+                            <td class="px-6 py-4 text-right" (mouseenter)="openedRowMenu = p.idBoardingPass ?? null"
+                                (mouseleave)="openedRowMenu = null">
+
+                                <!-- Botón 3 puntos -->
+                                <button type="button" class="h-9 w-9 inline-flex items-center justify-center rounded-xl
+               text-slate-600 hover:bg-slate-100 transition">
+                                    ⋯
+                                </button>
+
+                                <!-- MENU -->
+                                <div *ngIf="openedRowMenu === p.idBoardingPass" class="absolute right-6 mt-2 w-56 bg-white border border-slate-200 
+               rounded-xl shadow-lg z-40 overflow-hidden">
+
+                                    <button class="w-full text-left px-4 py-2 hover:bg-slate-50 text-sm"
+                                        (click)="openUserInfo(p); openedRowMenu = null">
+                                        👤 Información Usuario
+                                    </button>
+
+                                    <button class="w-full text-left px-4 py-2 hover:bg-slate-50 text-sm"
+                                        (click)="openMessageUser(p); openedRowMenu = null">
+                                        💬 Mensaje
+                                    </button>
+
+                                    <div class="h-px bg-slate-200 my-1"></div>
+
+                                    <button class="w-full text-left px-4 py-2 hover:bg-slate-50 text-sm text-amber-700"
+                                        (click)="disablePass(p); openedRowMenu = null">
+                                        🚫 Deshabilitar Pase
+                                    </button>
+
+                                    <button class="w-full text-left px-4 py-2 hover:bg-red-50 text-sm text-red-700"
+                                        (click)="deletePass(p, $event); openedRowMenu = null">
+                                        🗑️ Borrar Pase
+                                    </button>
+
+                                </div>
+
                             </td>
+
                         </tr>
                     </ng-container>
 
@@ -177,9 +228,11 @@
                                 {{ amountPaymentAsNumber(p) | currency:p.currency:'symbol' }}
                             </td>
 
-                            <td class="px-6 py-4 text-right">
+                            <td class="px-6 py-4 text-right" (mouseenter)="openedRowMenu = p.idBoardingPass ?? null"
+                                (mouseleave)="openedRowMenu = null">
+
                                 <button type="button" class="h-9 w-9 inline-flex items-center justify-center rounded-xl
-         text-slate-600 hover:bg-slate-100 transition" (click)="toggleRowMenu(p)">
+             text-slate-600 hover:bg-slate-100 transition">
                                     ⋯
                                 </button>
 
@@ -191,7 +244,11 @@
                                         (click)="openAddPartialPaymentFromReport(p)">
                                         ➕ Agregar pago
                                     </button>
-
+                                    <button
+                                        class="w-full text-left px-4 py-2 hover:bg-slate-50 text-sm flex items-center gap-2"
+                                        (click)="openPaymentHistory(p)">
+                                        📜 Historial de pagos
+                                    </button>
                                     <button class="w-full text-left px-4 py-2 hover:bg-slate-50 text-sm"
                                         (click)="openMessageUser(p)">
                                         💬 Mensaje
@@ -203,6 +260,71 @@
                                     </button>
 
                                 </div>
+
+                            </td>
+
+                        </tr>
+                    </ng-container>
+
+                    <!-- ROWS: INACTIVOS -->
+                    <ng-container *ngIf="!loading && tab === 'inactivos'">
+                        <tr *ngFor="let p of pagedInactivos" class="hover:bg-slate-50 transition">
+                            <td class="px-6 py-4 text-slate-700">
+                                {{ getUserDisplayName(p) }}
+                            </td>
+
+                            <td class="px-6 py-4 text-slate-700 text-right">
+                                {{ getUserStudentId(p) }}
+                            </td>
+                            <td class="px-6 py-4">
+                                <span
+                                    class="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-blue-100 text-blue-700 w-fit">
+                                    {{ p.name }}
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4 text-slate-700">
+                                {{ p.routeName }}
+                            </td>
+
+                            <td class="px-6 py-4 text-slate-700 whitespace-nowrap">
+                                <span [ngClass]="getValidToClass(p)">
+                                    {{ toJsDate(p.validTo) | date:'dd/MM/yyyy' }}
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 rounded text-xs font-semibold"
+                                    [ngClass]="statusBadgeClass(p.status)">
+                                    {{ statusLabel(p) }}
+                                </span>
+                            </td>
+                            <!-- MENU -->
+                            <td class="px-6 py-4 text-right" (mouseenter)="openedRowMenu = p.idBoardingPass ?? null"
+                                (mouseleave)="openedRowMenu = null">
+
+                                <!-- Botón -->
+                                <button type="button" class="h-9 w-9 inline-flex items-center justify-center rounded-xl
+               text-slate-600 hover:bg-slate-100 transition">
+                                    ⋯
+                                </button>
+
+                                <!-- MENU -->
+                                <div *ngIf="openedRowMenu === p.idBoardingPass" class="absolute right-6 mt-2 w-48 bg-white border border-slate-200
+               rounded-xl shadow-lg z-40 overflow-hidden">
+
+                                    <button class="w-full text-left px-4 py-2 hover:bg-slate-50 text-sm"
+                                        (click)="openMessageUser(p); openedRowMenu = null">
+                                        💬 Mensaje
+                                    </button>
+
+                                    <button class="w-full text-left px-4 py-2 hover:bg-slate-50 text-sm"
+                                        (click)="openUserInfo(p); openedRowMenu = null">
+                                        👤 Información Usuario
+                                    </button>
+
+                                </div>
+
                             </td>
 
                         </tr>
@@ -231,15 +353,25 @@
 
                 <span class="text-sm font-semibold text-slate-700">
                     Página
-                    {{ tab === 'activos' ? currentPageActivos : currentPageParciales }}
+                    {{
+                    tab === 'activos' ? currentPageActivos :
+                    tab === 'parcialidades' ? currentPageParciales :
+                    currentPageInactivos
+                    }}
                     /
-                    {{ tab === 'activos' ? totalPagesActivos : totalPagesParciales }}
+                    {{
+                    tab === 'activos' ? totalPagesActivos :
+                    tab === 'parcialidades' ? totalPagesParciales :
+                    totalPagesInactivos
+                    }}
                 </span>
 
                 <button class="px-3 py-1 rounded-lg border border-slate-300 text-slate-700 disabled:opacity-50"
-                    (click)="nextPage()" [disabled]="(tab === 'activos'
-        ? currentPageActivos >= totalPagesActivos
-        : currentPageParciales >= totalPagesParciales)" type="button">
+                    (click)="nextPage()" [disabled]="tab === 'activos'
+    ? currentPageActivos >= totalPagesActivos
+    : tab === 'parcialidades'
+      ? currentPageParciales >= totalPagesParciales
+      : currentPageInactivos >= totalPagesInactivos" type="button">
                     ›
                 </button>
             </div>
@@ -279,12 +411,32 @@
 
                 <!-- estado -->
                 <div class="flex items-center justify-between gap-3 mb-4">
-                    <div class="text-sm text-slate-700">
-                        Parcialidades Cubiertas <span class="font-semibold">{{ generatedPartialPaymentsCount }}</span>
-                        <span class="text-slate-500">·</span>
-                        Parcialidades Faltantes <span class="font-semibold">{{ availablePartialPayments.length }}</span>
-                        <span class="text-slate-500">·</span>
-                        Total de Parcialidades <span class="font-semibold">{{ partialPayments.length }}</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+
+                        <!-- Cubiertas -->
+                        <div class="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
+                            <div class="text-xs text-emerald-700 font-medium">Pagos Cubiertos</div>
+                            <div class="text-lg font-bold text-emerald-800">
+                                {{ generatedPartialPaymentsCount }}
+                            </div>
+                        </div>
+
+                        <!-- Faltantes -->
+                        <div class="rounded-xl border border-amber-100 bg-amber-50 p-3">
+                            <div class="text-xs text-amber-700 font-medium">Pagos Faltantes</div>
+                            <div class="text-lg font-bold text-amber-800">
+                                {{ availablePartialPayments.length }}
+                            </div>
+                        </div>
+
+                        <!-- Total -->
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                            <div class="text-xs text-slate-600 font-medium">Pagos Totales</div>
+                            <div class="text-lg font-bold text-slate-800">
+                                {{ partialPayments.length }}
+                            </div>
+                        </div>
+
                     </div>
 
                     <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border"
@@ -311,7 +463,7 @@
 
                         <select class="mt-2 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
                            focus:outline-none focus:ring-2 focus:ring-[#235000]/30 focus:border-[#235000]/60"
-                            [(ngModel)]="selectedAvailablePaymentId">
+                            [(ngModel)]="selectedAvailablePaymentId" (ngModelChange)="computeNextEndsAt()">
                             <option value="">Selecciona un pago pendiente…</option>
 
                             <option *ngFor="let p of availablePartialPayments" [value]="p.id">
@@ -332,18 +484,30 @@
                     <div *ngIf="selectedAvailablePaymentId"
                         class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
                         <ng-container *ngFor="let p of availablePartialPayments">
-                            <div *ngIf="p.id === selectedAvailablePaymentId" class="flex flex-wrap items-center gap-2">
-                                <span
-                                    class="inline-flex items-center rounded-full bg-slate-900 text-white px-2.5 py-1 text-xs font-semibold">
-                                    Pago #{{ p.paymentNumber }}
-                                </span>
-                                <span class="text-slate-700">
-                                    {{ p.startsAt.toDate() | date:'dd/MM/yyyy' }} -
-                                    {{ p.endsAt.toDate() | date:'dd/MM/yyyy' }}
-                                </span>
-                                <span class="font-semibold text-slate-900">
-                                    {{ p.amount | currency:(selectedPurchase?.currency || 'MXN'):'symbol' }}
-                                </span>
+                            <div *ngIf="p.id === selectedAvailablePaymentId" class="flex flex-col gap-2">
+
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span
+                                        class="inline-flex items-center rounded-full bg-slate-900 text-white px-2.5 py-1 text-xs font-semibold">
+                                        Pago #{{ p.paymentNumber }}
+                                    </span>
+
+                                    <span class="text-slate-700">
+                                        {{ p.startsAt.toDate() | date:'dd/MM/yyyy' }} -
+                                        {{ p.endsAt.toDate() | date:'dd/MM/yyyy' }}
+                                    </span>
+
+                                    <span class="font-semibold text-slate-900">
+                                        {{ p.amount | currency:(selectedPurchase?.currency || 'MXN'):'symbol' }}
+                                    </span>
+                                </div>
+
+                                <!-- NUEVO: vigencia -->
+                                <div *ngIf="nextEndsAt" class="text-xs text-slate-600">
+                                    <span class="font-semibold text-slate-900">La nueva fecha de vigencia es:</span>
+                                    {{ nextEndsAt.toDate() | date:'dd/MM/yyyy' }}
+                                </div>
+
                             </div>
                         </ng-container>
                     </div>
@@ -516,5 +680,103 @@
             </div>
 
         </div>
+    </div>
+</div>
+
+<!-- MODAL: Historial de pagos -->
+<div *ngIf="showPaymentHistoryModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+
+    <!-- overlay -->
+    <div class="absolute inset-0 bg-slate-900/40" (click)="closePaymentHistoryModal()"></div>
+
+    <!-- modal -->
+    <div class="relative w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+
+        <!-- header -->
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/60">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <div class="text-base font-semibold text-slate-900">Historial de pagos</div>
+                    <div class="text-xs text-slate-500 mt-1">
+                        Lista de pagos del pase seleccionado.
+                    </div>
+                </div>
+
+                <button type="button"
+                    class="h-9 w-9 grid place-items-center rounded-xl hover:bg-slate-100 text-slate-600"
+                    (click)="closePaymentHistoryModal()">
+                    ✕
+                </button>
+            </div>
+        </div>
+
+        <!-- body -->
+        <div class="px-6 py-5">
+
+            <!-- empty state -->
+            <div *ngIf="!partialPaymentsOfProduct.length"
+                class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                No hay pagos para mostrar.
+            </div>
+
+            <!-- table -->
+            <div *ngIf="partialPaymentsOfProduct.length" class="overflow-hidden rounded-xl border border-slate-200">
+                <div class="max-h-[380px] overflow-auto">
+                    <table class="w-full text-sm">
+                        <thead class="sticky top-0 bg-white border-b border-slate-200">
+                            <tr class="text-left text-xs text-slate-500">
+                                <th class="px-4 py-3 font-semibold">Pago</th>
+                                <th class="px-4 py-3 font-semibold">Periodo</th>
+                                <th class="px-4 py-3 font-semibold text-right">Monto</th>
+                                <th class="px-4 py-3 font-semibold">Fecha de pago</th>
+                                <th class="px-4 py-3 font-semibold">Estado</th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-slate-100">
+                            <tr *ngFor="let pay of partialPaymentsOfProduct" class="hover:bg-slate-50">
+                                <td class="px-4 py-3 whitespace-nowrap font-semibold text-slate-900">
+                                    #{{ pay.paymentNumber }}
+                                </td>
+
+                                <td class="px-4 py-3 whitespace-nowrap text-slate-700">
+                                    {{ pay.startsAt?.toDate() | date:'dd/MM/yyyy' }} -
+                                    {{ pay.endsAt?.toDate() | date:'dd/MM/yyyy' }}
+                                </td>
+
+                                <td class="px-4 py-3 whitespace-nowrap text-right font-semibold text-slate-900">
+                                    {{ pay.amount | currency:(selectedPurchase?.currency || 'MXN'):'symbol' }}
+                                </td>
+                                <!-- Fecha de creación -->
+                                <td class="px-4 py-3 whitespace-nowrap text-slate-600 text-xs">
+                                    {{ pay.createdAt?.toDate() | date:'dd/MM/yyyy HH:mm' }}
+                                </td>
+
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span
+                                        class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border"
+                                        [ngClass]="pay.active
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                          : 'bg-slate-100 text-slate-600 border-slate-200'">
+                                        {{ pay.active ? 'Activo' : 'Inactivo' }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- footer -->
+        <div class="px-6 py-4 border-t border-slate-200 bg-white flex items-center justify-end gap-2">
+            <button type="button"
+                class="px-4 py-2 rounded-xl border border-slate-300 text-sm text-slate-700 hover:bg-slate-50"
+                (click)="closePaymentHistoryModal()">
+                Cerrar
+            </button>
+        </div>
+
     </div>
 </div>

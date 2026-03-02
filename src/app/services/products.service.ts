@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Firestore, collection, collectionData, doc, setDoc, updateDoc } from '@angular/fire/firestore';
 import { Storage, ref, uploadBytes, getDownloadURL } from '@angular/fire/storage';
 import { Observable, switchMap } from 'rxjs';
-import { CollectionReference, deleteDoc, DocumentData, getDocs, getDocsFromServer, orderBy, query, serverTimestamp, Timestamp, where, writeBatch } from 'firebase/firestore';
+import { collectionGroup, CollectionReference, deleteDoc, DocumentData, getDocs, getDocsFromServer, orderBy, query, serverTimestamp, Timestamp, where, writeBatch } from 'firebase/firestore';
 import { PartialPayment, Product } from '../interfaces/product.type';
 import { Functions, httpsCallable } from '@angular/fire/functions';
 
@@ -236,6 +236,23 @@ export class ProductsService {
       lastUpdatedAt: serverTimestamp(),
     });
   }
+
+  async suspendByBoardingPassId(boardingPassId: string) {
+
+    console.log(boardingPassId);
+    
+  const q = query(
+    collectionGroup(this.fs, 'boardingPasses'),
+    where('idBoardingPass', '==', boardingPassId) // o where('__name__','==',boardingPassId) si el docId es el id
+  );
+
+  const snap = await getDocs(q);
+  if (snap.empty) throw new Error('No se encontró el pase.');
+
+  // Si por alguna razón hay más de uno, aquí decides qué hacer (ej: suspender todos)
+  const target = snap.docs[0];
+  await updateDoc(target.ref, { active: false, lastUpdatedAt: serverTimestamp() });
+}
 
   /** Path: /users/{uid}/boardingPasses/{boardingPassId}/boardingPassesDetail */
   private boardingPassDetailCol(uid: string, boardingPassId: string) {

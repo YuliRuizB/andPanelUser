@@ -23,7 +23,7 @@ type IBoardingPassEx = IBoardingPass & {
   styleUrls: ['./boarding-pass.css'],
 })
 export class BoardingPassComponent {
-  activeTab: 'activos' | 'parcialidades' = 'activos';
+  activeTab: 'activos' | 'parcialidades' | 'inactivos' = 'activos';
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
   private authService = inject(AuthenticationService);
@@ -33,10 +33,13 @@ export class BoardingPassComponent {
   filterForm = this.fb.group({
     q: [''],
   });
+  allInactive: IBoardingPassEx[] = [];
+  inactiveFiltered: IBoardingPassEx[] = [];
+  currentPageInactivos = 1;
 
   loading = false;
   errorMsg = '';
-  tab: 'activos' | 'parcialidades' = 'activos';
+  tab: 'activos' | 'parcialidades' | 'inactivos' = 'activos';
   customerId = '';
   allActive: IBoardingPassEx[] = [];
   activeFiltered: IBoardingPassEx[] = [];
@@ -54,10 +57,12 @@ export class BoardingPassComponent {
   selectedAvailablePaymentId = '';
   openedRowMenu: string | null = null;
 
-  partialPayments: any[] = [];        
+  partialPayments: any[] = [];
   availablePartialPayments: any[] = [];
+  partialPaymentsOfProduct: any[] = [];
   generatedPartialPaymentsCount = 0;
   showUserInfoModal = false;
+  showPaymentHistoryModal = false;
 
   selectedUserInfo: {
     username?: string;
@@ -76,7 +81,10 @@ export class BoardingPassComponent {
     title: '',
     description: '',
   };
+  nextEndsAt: any = null;
   readonly myUid = 'FyXKSXsUbYNtAbWL7zZ66o2f1M92';
+
+
   constructor(private notification: ToastService,) {
 
   }
@@ -96,10 +104,11 @@ export class BoardingPassComponent {
     this.filterForm.valueChanges.subscribe(() => this.applyFilters());
   }
 
-  setTab(t: 'activos' | 'parcialidades') {
+  setTab(t: 'activos' | 'parcialidades' | 'inactivos') {
     this.tab = t;
     if (t === 'activos') this.currentPageActivos = 1;
-    else this.currentPageParciales = 1;
+    else if (t === 'parcialidades') this.currentPageParciales = 1;
+    else this.currentPageInactivos = 1;
 
     this.applyFilters();
   }
@@ -118,14 +127,14 @@ export class BoardingPassComponent {
       next: (rows: any[]) => {
         this.ngZone.run(() => {
           const normalized = (rows || []).map((p: any) => this.normalizePass(p));
-
-          this.allActive = normalized;
-          this.partialActive = normalized.filter((x) => x.isParcialPayment === true);
+          this.allActive = normalized.filter(x => (x as any).active !== false); // default true si no existe
+          this.allInactive = normalized.filter(x => (x as any).active === false);
+          this.partialActive = this.allActive.filter(x => x.isParcialPayment === true);
 
           this.applyFilters();
           this.loading = false;
 
-          this.cdr.markForCheck(); 
+          this.cdr.markForCheck();
         });
       },
       error: (err) => {
@@ -133,11 +142,12 @@ export class BoardingPassComponent {
         this.ngZone.run(() => {
           this.allActive = [];
           this.partialActive = [];
+          this.allInactive = [];
           this.applyFilters();
           this.loading = false;
           this.errorMsg = 'No se pudieron cargar los pases.';
 
-          this.cdr.markForCheck(); 
+          this.cdr.markForCheck();
         });
       },
     });
@@ -167,6 +177,7 @@ export class BoardingPassComponent {
     };
 
     this.activeFiltered = this.allActive.filter(match);
+    this.inactiveFiltered = this.allInactive.filter(match);
     this.partialFiltered = this.partialActive.filter(match);
 
     const sortByValidTo = (a: any, b: any) => {
@@ -177,17 +188,19 @@ export class BoardingPassComponent {
 
     this.activeFiltered.sort(sortByValidTo);
     this.partialFiltered.sort(sortByValidTo);
+    this.inactiveFiltered.sort(sortByValidTo);
 
     this.cdr.detectChanges();
     this.currentPageActivos = 1;
     this.currentPageParciales = 1;
+    this.currentPageInactivos = 1;
     this.cdr.markForCheck();
   }
 
   toJsDate(v: any): Date | null {
     if (!v) return null;
     if (v instanceof Date) return v;
-    if (typeof v?.toDate === 'function') return v.toDate(); 
+    if (typeof v?.toDate === 'function') return v.toDate();
     const d = new Date(v);
     return isNaN(d.getTime()) ? null : d;
   }
@@ -260,41 +273,54 @@ export class BoardingPassComponent {
   }
 
   get fromIndex(): number {
-    const total = this.tab === 'activos' ? this.activeFiltered.length : this.partialFiltered.length;
+    const total = this.totalItems;
     if (total === 0) return 0;
 
-    const page = this.tab === 'activos' ? this.currentPageActivos : this.currentPageParciales;
+    const page =
+      this.tab === 'activos' ? this.currentPageActivos :
+        this.tab === 'parcialidades' ? this.currentPageParciales :
+          this.currentPageInactivos;
+
     return (page - 1) * this.pageSize + 1;
   }
 
   get toIndex(): number {
-    const total = this.tab === 'activos' ? this.activeFiltered.length : this.partialFiltered.length;
+    const total = this.totalItems;
     if (total === 0) return 0;
 
-    const page = this.tab === 'activos' ? this.currentPageActivos : this.currentPageParciales;
+    const page =
+      this.tab === 'activos' ? this.currentPageActivos :
+        this.tab === 'parcialidades' ? this.currentPageParciales :
+          this.currentPageInactivos;
+
     return Math.min(page * this.pageSize, total);
   }
 
   get totalItems(): number {
-    return this.tab === 'activos' ? this.activeFiltered.length : this.partialFiltered.length;
+    if (this.tab === 'activos') return this.activeFiltered.length;
+    if (this.tab === 'parcialidades') return this.partialFiltered.length;
+    return this.inactiveFiltered.length;
   }
 
   prevPage() {
     if (this.tab === 'activos') {
       if (this.currentPageActivos > 1) this.currentPageActivos--;
-    } else {
+    } else if (this.tab === 'parcialidades') {
       if (this.currentPageParciales > 1) this.currentPageParciales--;
+    } else {
+      if (this.currentPageInactivos > 1) this.currentPageInactivos--;
     }
   }
 
   nextPage() {
     if (this.tab === 'activos') {
       if (this.currentPageActivos < this.totalPagesActivos) this.currentPageActivos++;
-    } else {
+    } else if (this.tab === 'parcialidades') {
       if (this.currentPageParciales < this.totalPagesParciales) this.currentPageParciales++;
+    } else {
+      if (this.currentPageInactivos < this.totalPagesInactivos) this.currentPageInactivos++;
     }
   }
-
   getValidToState(p: any): 'expired' | 'today' | 'future' {
     const d = this.toJsDate(p.validTo);
     if (!d) return 'future';
@@ -402,14 +428,14 @@ export class BoardingPassComponent {
     try {
       this.isSendingMessage = true;
 
-      const requestId = 'suhB7YFAh6PYXCRuJhfD'; 
+      const requestId = 'suhB7YFAh6PYXCRuJhfD';
 
       const dataMessage = {
         createdAt: new Date(),
         from: this.myUid,
         fromName: 'Apps And Informa',
-        msg,                
-        title,              
+        msg,
+        title,
         requestId,
         token: this.messageTarget.token ?? '',
         uid: this.messageTarget.uid,
@@ -418,10 +444,10 @@ export class BoardingPassComponent {
 
       const notifMessage = {
         timestamp: new Date(),
-        title,              
+        title,
         from: this.myUid,
         requestId,
-        body: msg,          
+        body: msg,
         token: this.messageTarget.token ?? '',
         uid: this.messageTarget.uid
       };
@@ -477,12 +503,25 @@ export class BoardingPassComponent {
       this.notification.warning('Selecciona un pago', 'And Informa');
       return;
     }
+    const orderedPayments = [...this.availablePartialPayments]
+      .sort((a, b) => Number(a.paymentNumber) - Number(b.paymentNumber));
+
+    const currentIndex = orderedPayments.findIndex(p => p.id === chosen?.id);
+
+    let nextEndsAt: any = null;
+
+    if (currentIndex !== -1 && currentIndex < orderedPayments.length - 1) {
+      nextEndsAt = orderedPayments[currentIndex + 1].endsAt;
+    } else {
+      nextEndsAt = chosen?.endsAt;
+    }
 
     const purchase = this.selectedPurchase as any;
     if (!purchase?.uid || !purchase?.idBoardingPass) {
       this.notification.error('Faltan datos de la compra (uid/idBoardingPass).', 'And Informa');
       return;
     }
+    console.log(nextEndsAt, chosen.endsAt);
 
     try {
       const addAmount = this.toNumber(chosen.amount);
@@ -492,7 +531,7 @@ export class BoardingPassComponent {
         active: true,
         amount: addAmount,
         startsAt: chosen.startsAt,
-        endsAt: chosen.endsAt,
+        endsAt: nextEndsAt,
         paymentNumber: Number(chosen.paymentNumber),
         createdAt: Timestamp.fromDate(new Date()),
       };
@@ -512,8 +551,8 @@ export class BoardingPassComponent {
         amount: newAmount,
         amountPayment: newAmountPayment,
         partialPaymentAmount: newPartialPaymentAmount,
-        validTo: newValidTo,
-        endsAt: chosen.endsAt,
+        validTo: nextEndsAt,
+        endsAt: nextEndsAt,
         partialPaymentId: chosen.id,
         partialPaymentAmountSelected: addAmount,
       });
@@ -527,8 +566,8 @@ export class BoardingPassComponent {
         amount: newAmount,
         amountPayment: newAmountPayment,
         partialPaymentAmount: newPartialPaymentAmount,
-        validTo: newValidTo,
-        endsAt: chosen.endsAt,
+        validTo: nextEndsAt,
+        endsAt: nextEndsAt,
         partialPaymentId: chosen.id,
         partialPaymentAmountSelected: addAmount,
       };
@@ -562,5 +601,131 @@ export class BoardingPassComponent {
     this.selectedPurchase = null;
     this.cdr.detectChanges();
   }
+
+  async disablePass(p: any, ev?: MouseEvent) {
+    ev?.stopPropagation();
+    this.openedRowMenu = null;
+
+    const id = (p?.id ?? p?.idBoardingPass) as string;
+    if (!id) {
+      this.notification.error('No tengo id del pase para suspenderlo.', 'And Informa');
+      return;
+    }
+
+    const ok = confirm(`¿Suspender el pase "${p?.name ?? ''}"?`);
+    if (!ok) return;
+
+    try {
+      // Opción recomendada: campo active
+      await this.productsService.suspendByBoardingPassId(id);
+
+      this.ngZone.run(() => {
+        this.notification.success('Pase suspendido.', 'And Informa');
+        this.allActive = this.allActive.filter(x => {
+          const xid = (x.id ?? (x as any).idBoardingPass) as string;
+          return xid !== id;
+        });
+
+        this.partialActive = this.partialActive.filter(x => {
+          const xid = (x.id ?? (x as any).idBoardingPass) as string;
+          return xid !== id;
+        });
+        if (this.selectedPurchase) {
+          const sid = (this.selectedPurchase.id ?? (this.selectedPurchase as any).idBoardingPass) as string;
+          if (sid === id) this.selectedPurchase = null;
+        }
+
+        this.applyFilters();
+        this.cdr.detectChanges();
+      });
+
+    } catch (e: any) {
+      console.error(e);
+      this.notification.error(e?.message ?? 'No se pudo suspender el pase.', 'And Informa');
+    }
+  }
+
+  deletePass(p: any, ev?: MouseEvent) {
+    ev?.stopPropagation();
+    this.openedRowMenu = null;
+    const uid = p?.user?.uid || p?.uid || p?._userId;
+    if (!uid) {
+      this.notification.error('No tengo uid del usuario para borrar el pase.', 'And Informa');
+      return;
+    }
+
+    const id = (p?.id ?? p?.idBoardingPass) as string;
+    if (!id) {
+      this.notification.error('No tengo id del pase para borrarlo.', 'And Informa');
+      return;
+    }
+
+    const ok = confirm(`¿Seguro que deseas BORRAR el pase "${p?.name ?? ''}"?\nEsta acción no se puede deshacer.`);
+    if (!ok) return;
+
+    this.userService.deleteBoardingPass(uid, id)
+      .then(() => {
+        this.ngZone.run(() => {
+          this.notification.success('¡Boarding pass eliminado!', 'And Informa');
+
+          this.allActive = this.allActive.filter(x => (x.id ?? (x as any).idBoardingPass) !== id);
+          this.partialActive = this.partialActive.filter(x => (x.id ?? (x as any).idBoardingPass) !== id);
+
+          this.applyFilters();
+          this.cdr.markForCheck();
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        this.ngZone.run(() => this.notification.error(err, 'And Informa'));
+      });
+  }
+
+  get totalPagesInactivos(): number {
+    return Math.max(1, Math.ceil(this.inactiveFiltered.length / this.pageSize));
+  }
+
+  get pagedInactivos() {
+    const start = (this.currentPageInactivos - 1) * this.pageSize;
+    return this.inactiveFiltered.slice(start, start + this.pageSize);
+  }
+
+  computeNextEndsAt(): void {
+    const chosen = this.availablePartialPayments.find(p => p.id === this.selectedAvailablePaymentId);
+
+    if (!chosen) {
+      this.nextEndsAt = null;
+      return;
+    }
+
+    // Ordenar por paymentNumber (robusto aunque vengan desordenados)
+    const ordered = [...this.availablePartialPayments].sort(
+      (a, b) => Number(a.paymentNumber) - Number(b.paymentNumber)
+    );
+
+    const idx = ordered.findIndex(p => p.id === chosen.id);
+
+    // Si hay siguiente, usamos su endsAt; si no, usamos el del chosen
+    this.nextEndsAt =
+      (idx !== -1 && idx < ordered.length - 1)
+        ? ordered[idx + 1].endsAt
+        : chosen.endsAt;
+  }
+
+ async openPaymentHistory(p: any) {
+  this.openedRowMenu = null;
+
+  // Si necesitas, guarda el registro actual
+  this.selectedPurchase = p;
+this.partialPaymentsOfProduct =
+        await this.productsService.getPartialPaymentDetails(p.uid, p.idBoardingPass);
+
+
+  this.showPaymentHistoryModal = true;
+}
+
+closePaymentHistoryModal() {
+  this.showPaymentHistoryModal = false;
+}
 
 }

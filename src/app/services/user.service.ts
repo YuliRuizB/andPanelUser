@@ -211,7 +211,7 @@ export class userService {
     // 🔎 Filtra solo por customerId (sin usuario)
     // Si en algunos docs guardaste customer_id, puedes usar OR con dos queries (te lo dejo abajo).
     const q = onlyActive
-      ? query(ref, where('customerId', '==', customerId), where('active', '==', true), orderBy('validTo', 'desc'))
+      ? query(ref, where('customerId', '==', customerId), orderBy('validTo', 'desc'))
       : query(ref, where('customerId', '==', customerId), orderBy('validTo', 'desc'));
 
     return new Observable<any[]>((subscriber) => {
