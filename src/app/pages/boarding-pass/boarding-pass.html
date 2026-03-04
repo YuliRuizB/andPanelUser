@@ -258,6 +258,15 @@
                                         (click)="openUserInfo(p)">
                                         👤 Información Usuario
                                     </button>
+                                      <button class="w-full text-left px-4 py-2 hover:bg-slate-50 text-sm text-amber-700"
+                                        (click)="disablePass(p); openedRowMenu = null">
+                                        🚫 Deshabilitar Pase
+                                    </button>
+
+                                    <button class="w-full text-left px-4 py-2 hover:bg-red-50 text-sm text-red-700"
+                                        (click)="deletePass(p, $event); openedRowMenu = null">
+                                        🗑️ Borrar Pase
+                                    </button>
 
                                 </div>
 

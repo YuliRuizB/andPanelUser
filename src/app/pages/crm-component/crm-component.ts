@@ -67,9 +67,7 @@ export class CrmComponent {
         map((u) => u.customerId!),
         takeUntil(this.destroy$)
       )
-      .subscribe((cid) => {
-        console.log("Customer ID:", cid);
-
+      .subscribe((cid) => {     
         this.customerId = cid;
         this.getSubscription();
       });
@@ -81,8 +79,7 @@ export class CrmComponent {
   }
 
   private async loadUsersByCustomer(cid: string) {
-    this.usersList = await this.customerService.getUsersByCustomerOnce(cid);
-    // opcional si notas que no refresca la UI en algunos casos
+    this.usersList = await this.customerService.getUsersByCustomerOnce(cid);   
     this.cdr.detectChanges();
   }
 
@@ -155,20 +152,18 @@ export class CrmComponent {
       const paymentMethods = await this.customerService.getPaymentMethods(this.customerId);
       this.paymentMethods = paymentMethods ?? [];
 
-      this.loading = false; // listo
+      this.loading = false; 
     } catch (err) {
       this.loading = false;
       console.error(err);
     }
   }
 
-  // --- Upload con input file (sin ng-zorro) ---
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
 
-    // (Opcional) validaciones
     const allowed = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowed.includes(file.type)) {
       console.warn('Formato no permitido:', file.type);
@@ -182,7 +177,7 @@ export class CrmComponent {
       return;
     }
 
-    // Preview + upload
+   
     const reader = new FileReader();
     reader.onload = () => {
       this.avatarPreviewUrl = typeof reader.result === 'string' ? reader.result : null;
@@ -190,7 +185,7 @@ export class CrmComponent {
     };
     reader.readAsDataURL(file);
 
-    input.value = ''; // permite seleccionar el mismo archivo otra vez
+    input.value = ''; 
   }
 
   private uploadToFirebase(file: File, _base64: string) {
@@ -220,9 +215,8 @@ export class CrmComponent {
   }
   updatePhotoURL(url: string) {
     this.objectForm.get('imageUrl')?.patchValue(url);
-    this.avatarPreviewUrl = url; // opcional: que el preview ya sea la URL final
-
-    // aquí ya puedes persistirlo en firestore:
+    this.avatarPreviewUrl = url; 
+    
      this.customerService.updateAvatarAccount(this.customerId, url);
     this.notification.success('Imagen subida correctamente', 'And Informa');
 

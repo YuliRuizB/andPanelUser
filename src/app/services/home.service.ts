@@ -66,8 +66,7 @@ export class HomeService {
         const ref = collection(this.firestore, `users`);
 
         const q = query(
-            ref,
-            //  where('active', '==', true),
+            ref,           
             where('customerId', '==', customerId)
         );
 
@@ -112,8 +111,7 @@ export class HomeService {
         return snapshot.data().count;
     }
 
-    async getUsersCreatedIn2026ByMonth(): Promise<number[]> {
-        // Rango: [2026-01-01, 2027-01-01)
+    async getUsersCreatedIn2026ByMonth(): Promise<number[]> {      
         const start = Timestamp.fromDate(new Date('2026-01-01T00:00:00-06:00'));
         const end = Timestamp.fromDate(new Date('2027-01-01T00:00:00-06:00'));
 
@@ -135,8 +133,8 @@ export class HomeService {
 
             if (!ts) return;
 
-            const d = ts.toDate();               // Date real
-            const monthIndex = d.getMonth();     // 0=Ene ... 11=Dic
+            const d = ts.toDate();             
+            const monthIndex = d.getMonth();    
             counts[monthIndex]++;
         });
 
@@ -149,12 +147,8 @@ export class HomeService {
         const out = Array(12).fill(0);
 
         for (let m = 0; m < 12; m++) {
-            const month = String(m + 1).padStart(2, '0');
-
-            // inicio del mes
+            const month = String(m + 1).padStart(2, '0');          
             const start = `2025-${month}-01T00:00:00-06:00`;
-
-            // inicio del siguiente mes
             const end =
                 m === 11
                     ? `2026-01-01T00:00:00-06:00`

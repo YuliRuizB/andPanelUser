@@ -739,7 +739,7 @@
                                             <td class="px-4 py-3">
                                                 <button type="button" class="h-9 w-9 inline-flex items-center justify-center rounded-xl
                                                     text-slate-500 hover:text-red-600 hover:bg-red-50
-                                                    transition" title="Borrar" (click)="deletePartialPaymentModal(p)">                                                
+                                                    transition" title="Borrar" (click)="deletePartialPaymentModal(p)">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1513,11 +1513,28 @@
 
                 <!-- estado -->
                 <div class="flex items-center justify-between gap-3 mb-4">
-                    <div class="text-sm text-slate-700">
-                          <span class="text-slate-500">·</span>
-                        Parcialidades Faltantes <span class="font-semibold">{{ availablePartialPayments.length }}</span>                      
-                           <span class="text-slate-500">·</span>
-                        Parcialidades Cubiertas<span class="font-semibold">{{ partialPayments.length }}</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                        <!-- Faltantes -->
+                        <div class="rounded-xl border border-amber-100 bg-amber-50 p-3">
+                            <div class="text-xs text-amber-700 font-medium">
+                                Pagos Faltantes
+                            </div>
+                            <div class="text-lg font-bold text-amber-800">
+                                {{ availablePartialPayments.length }}
+                            </div>
+                        </div>
+
+                        <!-- Cubiertas -->
+                        <div class="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
+                            <div class="text-xs text-emerald-700 font-medium">
+                                Pagos Cubiertos
+                            </div>
+                            <div class="text-lg font-bold text-emerald-800">
+                                {{ partialPayments.length }}
+                            </div>
+                        </div>
+
                     </div>
 
                     <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border"
@@ -1544,7 +1561,8 @@
 
                         <select class="mt-2 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm
                            focus:outline-none focus:ring-2 focus:ring-[#235000]/30 focus:border-[#235000]/60"
-                            [(ngModel)]="selectedAvailablePaymentId">
+                            [(ngModel)]="selectedAvailablePaymentId"
+                             (ngModelChange)="computeNextEndsAt()">
                             <option value="">Selecciona un pago pendiente…</option>
 
                             <option *ngFor="let p of availablePartialPayments" [value]="p.id">
@@ -1564,19 +1582,33 @@
                     <!-- preview (opcional, se ve pro) -->
                     <div *ngIf="selectedAvailablePaymentId"
                         class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+
                         <ng-container *ngFor="let p of availablePartialPayments">
-                            <div *ngIf="p.id === selectedAvailablePaymentId" class="flex flex-wrap items-center gap-2">
-                                <span
-                                    class="inline-flex items-center rounded-full bg-slate-900 text-white px-2.5 py-1 text-xs font-semibold">
-                                    Pago #{{ p.paymentNumber }}
-                                </span>
-                                <span class="text-slate-700">
-                                    {{ p.startsAt.toDate() | date:'dd/MM/yyyy' }} -
-                                    {{ p.endsAt.toDate() | date:'dd/MM/yyyy' }}
-                                </span>
-                                <span class="font-semibold text-slate-900">
-                                    {{ p.amount | currency:(selectedPurchase?.currency || 'MXN'):'symbol' }}
-                                </span>
+                            <div *ngIf="p.id === selectedAvailablePaymentId" class="flex flex-col gap-2">
+
+                                <!-- fila principal -->
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span
+                                        class="inline-flex items-center rounded-full bg-slate-900 text-white px-2.5 py-1 text-xs font-semibold">
+                                        Pago #{{ p.paymentNumber }}
+                                    </span>
+
+                                    <span class="text-slate-700">
+                                        {{ p.startsAt.toDate() | date:'dd/MM/yyyy' }} -
+                                        {{ p.endsAt.toDate() | date:'dd/MM/yyyy' }}
+                                    </span>
+
+                                    <span class="font-semibold text-slate-900">
+                                        {{ p.amount | currency:(selectedPurchase?.currency || 'MXN'):'symbol' }}
+                                    </span>
+                                </div>
+
+                                <!-- NUEVO: vigencia -->
+                                <div *ngIf="nextEndsAt" class="text-xs text-slate-600">
+                                    <span class="font-semibold text-slate-900">La nueva fecha de vigencia es:</span>
+                                    {{ nextEndsAt.toDate() | date:'dd/MM/yyyy' }}
+                                </div>
+
                             </div>
                         </ng-container>
                     </div>

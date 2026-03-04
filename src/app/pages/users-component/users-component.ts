@@ -1,4 +1,3 @@
-// src/app/pages/users-component/users-component.ts
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, ElementRef, inject, NgZone, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -91,18 +90,17 @@ export class UsersComponent {
   isConfirmLoading = false;
   boardingPassForm!: FormGroup;
 
-  // Data combos
   products: any[] = [];
   routes2: any[] = [];
   stopPoints: any[] = [];
 
-  // flags UI
-  ifValidPayment = false;  // true cuando es Transferencia
+
+  ifValidPayment = false;
   isAnticipo = false;
   productSelected: any = null;
-  receiptFile: File | null = null; // comprobante seleccionado
+  receiptFile: File | null = null;
   partialPaymentOptions: PartialPaymentOption[] = [];
-  fullpartialpaymentDocs: PartialPayment[] = []; // guarda el original completo para filtrar según opción seleccionada
+  fullpartialpaymentDocs: PartialPayment[] = [];
   partialPaymentDocs: PartialPayment[] = [];
   isPartialProduct = false;
   isPartialLoading = false;
@@ -110,10 +108,10 @@ export class UsersComponent {
   partialPayments: PartialPayment[] = [];
   isLoadingPartialPayments = false;
   showAddPartialPaymentModal = false;
-  // los ya generados en el pase
   availablePartialPayments: PartialPayment[] = [];
-  selectedAvailablePaymentId: string = ''; // id del pago del producto a generar
+  selectedAvailablePaymentId: string = '';
 
+  nextEndsAt: any = null;
 
   constructor(
     private userService: userService,
@@ -180,7 +178,7 @@ export class UsersComponent {
               Array.isArray(resp) ? resp :
                 Array.isArray(resp?.data) ? resp.data :
                   Array.isArray(resp?.users) ? resp.users :
-                    resp ? [resp] : []; // si viene 1 usuario, lo envuelve
+                    resp ? [resp] : [];
 
             this.users = list as User1[];
             this.filteredUsers = this.users;
@@ -399,7 +397,6 @@ export class UsersComponent {
 
     try {
       const data = await this.customersService.getLatestUserPurchasesOnce(userId, 10);
-      console.log(data);
 
       if (reqId !== this.latestPurchasesReqId) return;
 
@@ -507,7 +504,6 @@ export class UsersComponent {
     this.selectedPurchase = purchase;
     this.purchaseDetailTab = 'detalle';
 
-    // Determina ids (ajusta a tus nombres reales)
     const uid = purchase.uidUser || purchase.uid || purchase.user?.uid || purchase.idBoardingPass /* no */;
     const boardingPassId = purchase.idBoardingPass || purchase.boardingPassId || purchase.id;
 
@@ -670,33 +666,28 @@ export class UsersComponent {
 
   async downloadPdf() {
     try {
-      // 1) Genera el QR y deja que Angular pinte el <img>
+
       await this.buildQr();
       await new Promise(requestAnimationFrame);
-
       const element = document.getElementById('credencial') as HTMLElement | null;
       if (!element) return;
 
-      // 2) Clona seguro (sin romper layout)
       const { wrapper, clone } = this.makeHtml2CanvasSafeClone(element);
-
-      // 3) Espera imágenes DEL CLON (no del DOM real)
       await this.waitForImages(clone);
 
-      // 4) Render canvas
+
       const canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
-        // importante: evita recortes raros
         scrollX: 0,
         scrollY: 0,
         windowWidth: clone.scrollWidth,
         windowHeight: clone.scrollHeight,
       });
 
-      // 5) PDF
+
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'pt', 'a4');
 
@@ -717,7 +708,7 @@ export class UsersComponent {
 
   onAvatarError(ev: Event) {
     const img = ev.target as HTMLImageElement;
-    img.src = 'assets/images/logo2.jpeg'; // pon tu placeholder
+    img.src = 'assets/images/logo2.jpeg';
   }
 
   get qrValue(): string {
@@ -750,7 +741,6 @@ export class UsersComponent {
         .split(/\s+/)
         .filter(Boolean)
         .filter((c) => {
-          // quitamos SOLO clases que suelen depender de oklab/oklch (tailwind v4)
           return !(
             c.startsWith('bg-') ||
             c.startsWith('text-') ||
@@ -767,13 +757,11 @@ export class UsersComponent {
       if (cls.length) node.setAttribute('class', cls.join(' '));
       else node.removeAttribute('class');
 
-      // Fuerza colores básicos para evitar oklab/oklch en computed styles
       node.style.color = node.style.color || '#0f172a';
       node.style.outlineColor = '#0f172a';
-      // No fuerces borderColor si ya usas bordes inline en tu HTML
+
     });
 
-    // Asegura que el contenedor no haga wrap (evita que se apile en PDF)
     clone.style.flexWrap = 'nowrap';
     clone.style.backgroundColor = '#f1f5f9';
 
@@ -807,7 +795,6 @@ export class UsersComponent {
   }
 
   private initBoardingPassForm() {
-    // Nota: en HTML usé inputs type="date", así que aquí guardamos yyyy-MM-dd (string)
     const today = this.toDateInputValue(new Date());
 
     this.boardingPassForm = this.fb.group({
@@ -819,15 +806,14 @@ export class UsersComponent {
       stopName: ['', Validators.required],
       stopDescription: ['', Validators.required],
       round: ['', Validators.required],
-      payment: ['', Validators.required],      // Mensualidad/Anticipo/Liquidacion
-      typePayment: ['', Validators.required],  // Transferencia/Efectivo/Sistema
+      payment: ['', Validators.required],
+      typePayment: ['', Validators.required],
       amount: [0, [Validators.required, Validators.min(0)]],
       amountPayment: [0, [Validators.required, Validators.min(0)]],
       is_courtesy: [false],
-      promiseDate: [today], // solo si anticipo
+      promiseDate: [today],
       validFrom: [today, Validators.required],
       validTo: ['', Validators.required],
-      // para guardar URL si subes a storage
       fileURL: [''],
       isParcialPayment: [false],
       partialPaymentAmount: [0],
@@ -847,18 +833,15 @@ export class UsersComponent {
   }
 
   addBoardingPPass(uid: string) {
-    // abre modal + precarga combos
+
     this.isBoardingPassModalOpen = true;
 
-    // reset limpio (sin perder defaults)
     this.initBoardingPassForm();
     this.receiptFile = null;
     this.ifValidPayment = false;
     this.isAnticipo = false;
     this.productSelected = null;
-
-    // Carga data (ajusta a tus servicios / firestore)
-    this.loadProductsAndRoutes();   // <-- implementa según tu app
+    this.loadProductsAndRoutes();
   }
 
   closeBoardingPassModal() {
@@ -885,23 +868,12 @@ export class UsersComponent {
     if (this.selectedUser?.customerId) {
       this.products = await this.productsService.getProducts(this.selectedUser?.customerId);
       this.routes2 = await this.productsService.getRoutes(this.selectedUser?.customerId);
-
-
     }
-
-    // EJEMPLO: reemplaza por tu lógica real
-    // this.productsService.getProducts(...).subscribe(p => this.products = p);
-    // this.routesService.getRoutes(...).subscribe(r => this.routes = r);
-
-    // Si ya los tienes cargados en el componente, solo valida:
-    // this.products = this.products ?? [];
-    // this.routes = this.routes ?? [];
   }
 
   onProductSelected(productId: string) {
     const record = this.products.find(p => p.productId === productId);
     if (!record) return;
-    console.log('record', record);
 
     this.productSelected = record;
 
@@ -913,7 +885,7 @@ export class UsersComponent {
       description: record.description,
       product_description: record.description,
       amount: record.price,
-      amountPayment: record.price, // default
+      amountPayment: record.price,
       price: record.price,
       category: record.category,
       paymentNumber: record.paymentNumber || 0,
@@ -922,7 +894,6 @@ export class UsersComponent {
       partialPaymentsCount: record.partialPaymentsCount || 0
     });
 
-    // si al elegir producto quieres setear status/cortesía:
     this.boardingPassForm.patchValue({ is_courtesy: false, status: 'completed' });
 
     this.boardingPassForm.patchValue({
@@ -964,7 +935,6 @@ export class UsersComponent {
   }
 
   async loadStopsByRoute(routeId: string) {
-    console.log('Loading stops for route:', routeId);
 
     if (!routeId) {
       this.stopPoints = [];
@@ -998,26 +968,21 @@ export class UsersComponent {
     this.isAnticipo = payment === 'Anticipo';
     const isParcialPayment = this.boardingPassForm.value.isParcialPayment;
     if (isParcialPayment) {
-      // this.boardingPassForm.patchValue({ amountPayment: 0 });
       return;
     }
-    // Mensualidad: amountPayment = amount
     if (payment === 'Mensualidad') {
       const amount = Number(this.boardingPassForm.get('amount')?.value || 0);
       this.boardingPassForm.patchValue({ amountPayment: amount });
     }
 
-    // Anticipo/Liquidación: amountPayment empieza en 0 (o lo que tú quieras)
     if (payment === 'Anticipo' || payment === 'Liquidacion') {
       this.boardingPassForm.patchValue({ amountPayment: 0 });
     }
   }
 
   changePaymentType(typePayment: string) {
-    // Transferencia => pedir comprobante
     this.ifValidPayment = typePayment === 'Transferencia';
 
-    // Si NO es transferencia, limpiamos file
     if (!this.ifValidPayment) {
       this.receiptFile = null;
       this.boardingPassForm.patchValue({ fileURL: '' });
@@ -1035,9 +1000,6 @@ export class UsersComponent {
     const amount = Number(this.boardingPassForm.get('amount')?.value || 0);
     const isCourtesy = !!this.boardingPassForm.get('is_courtesy')?.value;
 
-    if (!isCourtesy && amount > 0) {
-      // puedes ajustar reglas aquí si quieres
-    }
   }
 
   onReceiptSelected(event: Event) {
@@ -1045,23 +1007,16 @@ export class UsersComponent {
     const file = input.files?.[0] || null;
     this.receiptFile = file;
 
-    // Si después lo subes a Firebase Storage, aquí disparas el upload
-    // y al final haces: this.boardingPassForm.patchValue({ fileURL: downloadUrl });
   }
 
   async submitBoardingPass() {
-    // marcar todo como touched para mostrar errores
     this.boardingPassForm.markAllAsTouched();
 
     if (this.boardingPassForm.invalid) return;
-
-    // VALIDACIONES tipo tu portal
     const payment = this.boardingPassForm.value.payment;
     const typePayment = this.boardingPassForm.value.typePayment;
 
     if (payment === 'Anticipo' && !this.boardingPassForm.value.promiseDate) {
-      // muestra tu toast
-      // this.toast.error(...)
       return;
     }
 
@@ -1087,11 +1042,9 @@ export class UsersComponent {
     }
 
     if (typePayment === 'Transferencia' && !this.receiptFile && !this.boardingPassForm.value.fileURL) {
-      // si quieres obligar comprobante
       this.notification.warning('Debes adjuntar comprobante para transferencia.', 'And Informa');
       return;
     }
-    // nuevo
     const nowIso = new Date().toISOString();
 
     const validToVal = this.boardingPassForm.value.validTo;
@@ -1100,16 +1053,13 @@ export class UsersComponent {
     const validFromVal = this.boardingPassForm.value.validFrom;
     const validFromIso = validFromVal instanceof Date ? validFromVal.toISOString() : (validFromVal || nowIso);
 
-    // STATUS (igual idea que tu portal)
     const isCourtesy = !!this.boardingPassForm.value.is_courtesy;
 
-    // ✅ si es parcial, exige periodo seleccionado (recomendado)
     if (isPartialProduct && !this.boardingPassForm.value.partialPaymentId) {
       this.notification.warning('Selecciona el periodo del pago parcial.', 'And Informa');
       return;
     }
 
-    // ✅ STATUS: si el producto es parcial => SIEMPRE partial
     let status: 'partial' | 'completed' = 'completed';
 
     if (isCourtesy) {
@@ -1119,17 +1069,13 @@ export class UsersComponent {
     } else {
       status = (amountPayment !== amount) ? 'partial' : 'completed';
     }
-    console.log(this.boardingPassForm.value.amountPayment);
 
     this.boardingPassForm.patchValue({ status }, { emitEvent: false });
 
-    // Construir "send" (ajusta a lo que espera tu backend/cloud function)
     const send = {
       ...this.boardingPassForm.value,
-      // si en tu sistema ocupas user seleccionado:
       authorization: "portalAuth",
       user: this.selectedUser,
-      //idBoardingPass: this.selectedUser?.uid,
       customerId: this.selectedUser?.customerId,
       customer: {
         name: this.selectedUser?.firstName || "",
@@ -1162,8 +1108,7 @@ export class UsersComponent {
       conciliated: false,
       transaction_type: 'charge',
       operation_type: 'in',
-      method: payment,  // ojo: en tu portal usas method = paymentSelected
-      //creation_date: new Date().toISOString(),    
+      method: payment,
       currency: "MXN",
       creation_date: nowIso,
       date_created: nowIso,
@@ -1205,11 +1150,9 @@ export class UsersComponent {
       send.idBoardingPass = boardingPassId;
 
       if (isPartialProduct) {
-        // Recomendado: ya validaste partialPaymentId arriba
+
         const partialPaymentId = this.boardingPassForm.value.partialPaymentId;
 
-        // Define el periodo del parcial:
-        // (Aquí uso validFrom/validTo como rango del parcial, ajusta si tu periodo viene de otro lado)
         const startsAt = validFromVal instanceof Date
           ? Timestamp.fromDate(validFromVal)
           : Timestamp.fromDate(new Date(validFromIso));
@@ -1219,9 +1162,9 @@ export class UsersComponent {
           : Timestamp.fromDate(new Date(validToIso));
 
         await this.productsService.addPartialPaymentDetail(uid, boardingPassId, {
-          id: partialPaymentId,          // <- si quieres que el docId sea el periodo seleccionado
+          id: partialPaymentId,
           active: true,
-          amount: Number(this.boardingPassForm.value.amountPayment || 0), // pago de este movimiento
+          amount: Number(this.boardingPassForm.value.amountPayment || 0),
           startsAt,
           paymentNumber: this.paymentNumber,
           endsAt,
@@ -1250,30 +1193,19 @@ export class UsersComponent {
     if (!uid) return;
 
     this.isBoardingPassModalOpen = true;
-
-    // reset del form (sin perder defaults)
     this.initBoardingPassForm();
-
     this.receiptFile = null;
     this.ifValidPayment = false;
     this.isAnticipo = false;
     this.productSelected = null;
-
-    // carga combos (productos, rutas, stops)
     this.loadProductsAndRoutes();
   }
 
   getCreationDate(purchase: any): Date | null {
     const v = purchase?.creation_date;
     if (!v) return null;
-
-    // Si ya es Date
     if (v instanceof Date) return v;
-
-    // Firestore Timestamp (o cualquier objeto que tenga toDate)
     if (typeof v?.toDate === 'function') return v.toDate();
-
-    // String o number (por si alguna vez llega así)
     if (typeof v === 'string' || typeof v === 'number') {
       const d = new Date(v);
       return isNaN(d.getTime()) ? null : d;
@@ -1326,12 +1258,9 @@ export class UsersComponent {
         });
 
         this.isPartialProduct = this.partialPaymentOptions.length > 0;
-
-        // ✅ setea count en el form si lo tienes
         this.boardingPassForm.get('partialPaymentsCount')
           ?.setValue(docs.length, { emitEvent: false });
 
-        // reset del select
         this.boardingPassForm.patchValue({
           partialPaymentId: '',
           partialPaymentAmountSelected: 0
@@ -1344,7 +1273,7 @@ export class UsersComponent {
         console.error('Error loading partial payments', err);
         this.partialPaymentOptions = [];
         this.partialPaymentDocs = [];
-        this.isPartialProduct = true; // sigue siendo parcial, falló la carga
+        this.isPartialProduct = true;
         this.boardingPassForm.patchValue({
           partialPaymentId: '',
           partialPaymentAmountSelected: 0
@@ -1365,7 +1294,7 @@ export class UsersComponent {
     this.userService.getPartialPayments(customerId, productId, true).subscribe({
       next: (docs) => {
         this.fullpartialpaymentDocs = docs || [];
-        this.buildAvailablePartialPayments();  // ✅ aquí está lo que faltaba
+        this.buildAvailablePartialPayments();
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -1381,15 +1310,13 @@ export class UsersComponent {
     const opt = this.partialPaymentOptions.find(o => o.id === partialPaymentId);
     if (!opt) return;
 
-    console.log('Selected partial payment option:', opt);
-    this.paymentNumber = opt.paymentNumber || 0; // Guarda el número de pago seleccionado
+    this.paymentNumber = opt.paymentNumber || 0;
 
     this.boardingPassForm.patchValue({
       partialPaymentId: opt.id,
       partialPaymentAmountSelected: opt.amount,
       amountPayment: opt.amount,
       paymentNumber: opt.paymentNumber,
-      // opcional: alinear vigencia al periodo
       validFrom: this.toDateInputValue(opt.startsAt),
       validTo: this.toDateInputValue(opt.endsAt),
     }, { emitEvent: false });
@@ -1407,7 +1334,6 @@ export class UsersComponent {
     if (!this.canAddPartialPayment) return;
     if (!this.selectedPurchase) return;
 
-    // Asegura que ya tengas los pagos del pase (si aún no están)
     const uid = this.selectedPurchase.uid || this.selectedUser?.uid;
     const boardingPassId = this.selectedPurchase.idBoardingPass || this.selectedPurchase.id;
 
@@ -1415,11 +1341,8 @@ export class UsersComponent {
       await this.loadPartialPayments(uid, boardingPassId);
     }
 
-    // Trae los del producto y filtra disponibles
     this.loadPartialPayment(this.user.customerId, this.selectedPurchase.product_id);
     this.selectedAvailablePaymentId = '';
-
-    // Abre modal
     this.showAddPartialPaymentModal = true;
   }
 
@@ -1443,6 +1366,19 @@ export class UsersComponent {
       this.notification.warning('Selecciona un pago', 'And Informa');
       return;
     }
+    const orderedPayments = [...this.availablePartialPayments]
+      .sort((a, b) => Number(a.paymentNumber) - Number(b.paymentNumber));
+
+    const currentIndex = orderedPayments.findIndex(p => p.id === chosen?.id);
+
+    let nextEndsAt: any = null;
+
+    if (currentIndex !== -1 && currentIndex < orderedPayments.length - 1) {
+      nextEndsAt = orderedPayments[currentIndex + 1].endsAt;
+    } else {
+      nextEndsAt = chosen?.endsAt;
+    }
+
 
     const purchase = this.selectedPurchase;
     if (!purchase?.uid || !purchase?.idBoardingPass || !purchase?.id) {
@@ -1453,13 +1389,13 @@ export class UsersComponent {
     try {
       const addAmount = this.toNumber(chosen.amount);
 
-      // ✅ Crea el registro tal como tu tabla lo espera
+
       const newPartialPayment = {
         id: chosen.id,
         active: true,
         amount: addAmount,
-        startsAt: chosen.startsAt,   // Timestamp
-        endsAt: chosen.endsAt,       // Timestamp
+        startsAt: chosen.startsAt,
+        endsAt: nextEndsAt,
         paymentNumber: Number(chosen.paymentNumber),
         createdAt: Timestamp.fromDate(new Date()),
       };
@@ -1479,33 +1415,30 @@ export class UsersComponent {
         amount: newAmount,
         amountPayment: newAmountPayment,
         partialPaymentAmount: newPartialPaymentAmount,
-        validTo: newValidTo,
-        endsAt: chosen.endsAt,
+        validTo: nextEndsAt,
+        endsAt: nextEndsAt,
         partialPaymentId: chosen.id,
         partialPaymentAmountSelected: addAmount,
       });
 
-      // ✅ ACTUALIZA LA TABLA (esto es lo importante)
-      this.partialPayments = [...this.partialPayments, newPartialPayment];
 
-      // ✅ Quita el pago de la lista disponible para que ya no aparezca
+      this.partialPayments = [...this.partialPayments, newPartialPayment];
       this.availablePartialPayments = this.availablePartialPayments.filter(p => p.id !== chosen.id);
       this.selectedAvailablePaymentId = '';
 
-      // (opcional) también actualiza selectedPurchase
       this.selectedPurchase = {
         ...purchase,
         amount: newAmount,
         amountPayment: newAmountPayment,
         partialPaymentAmount: newPartialPaymentAmount,
         validTo: newValidTo,
-        endsAt: chosen.endsAt,
+        endsAt: nextEndsAt,
         partialPaymentId: chosen.id,
         partialPaymentAmountSelected: addAmount,
       };
 
       this.showAddPartialPaymentModal = false;
-      this.cdr.markForCheck(); // o detectChanges()
+      this.cdr.markForCheck();
 
       this.notification.success('Pago parcial agregado y compra actualizada.', 'And Informa');
     } catch (e) {
@@ -1521,14 +1454,13 @@ export class UsersComponent {
     this.availablePartialPayments = (this.fullpartialpaymentDocs || [])
       .filter(pp => {
         const n = Number(pp?.paymentNumber);
-        if (!Number.isFinite(n)) return false;     // sin # no lo ofrezcas
-        return !used.has(n);                       // si ya existe en pase, lo quitas
+        if (!Number.isFinite(n)) return false;
+        return !used.has(n);
       })
       .sort((a, b) => Number(a.paymentNumber) - Number(b.paymentNumber));
   }
 
   private tsToYmd(ts: any): string {
-    // ts es Firestore Timestamp
     const d = ts.toDate();
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -1548,12 +1480,11 @@ export class UsersComponent {
       return;
     }
 
-    // Confirmación simple (puedes cambiarlo por un modal bonito)
     const ok = confirm(`¿Seguro que desea borrar el pago #${p.paymentNumber}? Esta acción no se puede deshacer.`);
     if (!ok) return;
 
     try {
-      // 1) Borrar en Firestore
+
       await this.productsService.deletePartialPaymentDetail(
         purchase.uid,
         purchase.idBoardingPass,
@@ -1562,20 +1493,16 @@ export class UsersComponent {
 
       const removeAmount = this.toNumber(p.amount);
 
-      // 2) Actualizar arrays locales (tabla y selector)
       const remaining = this.partialPayments.filter(x => x.id !== p.id);
       this.partialPayments = remaining;
 
-      // Regresarlo a disponibles si tú quieres que vuelva a poder generarse:
       this.availablePartialPayments = [...this.availablePartialPayments, p]
         .sort((a, b) => (a.paymentNumber ?? 0) - (b.paymentNumber ?? 0));
 
-      // 3) Revertir totales (en memoria)
       const newAmount = this.toNumber(purchase.amount) - removeAmount;
       const newAmountPayment = this.toNumber(purchase.amountPayment) - removeAmount;
       const newPartialPaymentAmount = this.toNumber(purchase.partialPaymentAmount) - removeAmount;
 
-      // 4) Recalcular endsAt/validTo (máximo endsAt de los que quedan activos)
       const activeRemaining = remaining.filter(x => x.active);
 
       let newEndsAt: Timestamp | null = null;
@@ -1588,24 +1515,17 @@ export class UsersComponent {
           .at(-1)!;
 
         newEndsAt = maxEndsAt;
-        newValidTo = maxEndsAt.toDate().toISOString().slice(0, 10); // YYYY-MM-DD
+        newValidTo = maxEndsAt.toDate().toISOString().slice(0, 10);
       } else {
-        // si ya no quedan pagos activos, decide qué hacer:
-        // opción A: limpiar
         newEndsAt = null;
         newValidTo = null;
 
-        // opción B (si tienes una fecha base en purchase, úsala):
-        // newEndsAt = purchase.baseEndsAt ?? null;
-        // newValidTo = purchase.baseValidTo ?? null;
       }
 
-      // 5) Ajustar partialPaymentId/Selected si borraste el seleccionado
       let partialPaymentId: string | null = purchase.partialPaymentId ?? null;
       let partialPaymentAmountSelected: number | null = purchase.partialPaymentAmountSelected ?? null;
 
       if (purchase.partialPaymentId === p.id) {
-        // Si quedan activos, selecciona el que tenga el max endsAt (o el último pago)
         if (activeRemaining.length) {
           const selected = activeRemaining
             .slice()
@@ -1620,7 +1540,7 @@ export class UsersComponent {
         }
       }
 
-      // 6) Persistir update del boarding pass
+
       await this.productsService.updateBoardingPass(purchase.uid, purchase.idBoardingPass, {
         amount: newAmount,
         amountPayment: newAmountPayment,
@@ -1631,7 +1551,7 @@ export class UsersComponent {
         partialPaymentAmountSelected: partialPaymentAmountSelected ?? null,
       });
 
-      // 7) Reflejar cambios en selectedPurchase
+
       this.selectedPurchase = {
         ...purchase,
         amount: newAmount,
@@ -1650,5 +1570,25 @@ export class UsersComponent {
       this.notification.error('No se pudo borrar el pago parcial.', 'And Informa');
     }
   }
+
+  computeNextEndsAt(): void {
+    const chosen = this.availablePartialPayments.find(p => p.id === this.selectedAvailablePaymentId);
+
+    if (!chosen) {
+      this.nextEndsAt = null;
+      return;
+    }
+
+    const ordered = [...this.availablePartialPayments].sort(
+      (a, b) => Number(a.paymentNumber) - Number(b.paymentNumber)
+    );
+    const idx = ordered.findIndex(p => p.id === chosen.id);
+
+    this.nextEndsAt =
+      (idx !== -1 && idx < ordered.length - 1)
+        ? ordered[idx + 1].endsAt
+        : chosen.endsAt;
+  }
+
 
 }

@@ -237,29 +237,26 @@ export class ProductsService {
     });
   }
 
-  async suspendByBoardingPassId(boardingPassId: string) {
-
-    console.log(boardingPassId);
+  async suspendByBoardingPassId(boardingPassId: string) {  
     
   const q = query(
     collectionGroup(this.fs, 'boardingPasses'),
-    where('idBoardingPass', '==', boardingPassId) // o where('__name__','==',boardingPassId) si el docId es el id
+    where('idBoardingPass', '==', boardingPassId) 
   );
 
   const snap = await getDocs(q);
   if (snap.empty) throw new Error('No se encontró el pase.');
-
-  // Si por alguna razón hay más de uno, aquí decides qué hacer (ej: suspender todos)
+ 
   const target = snap.docs[0];
   await updateDoc(target.ref, { active: false, lastUpdatedAt: serverTimestamp() });
 }
 
-  /** Path: /users/{uid}/boardingPasses/{boardingPassId}/boardingPassesDetail */
+  
   private boardingPassDetailCol(uid: string, boardingPassId: string) {
     return collection(this.fs, `users/${uid}/boardingPasses/${boardingPassId}/boardingPassesDetail`);
   }
 
-  /** Crear detalle con ID propio guardado en campo "id" */
+  
   async addBoardingPassDetail(uid: string, boardingPassId: string, data: any) {
     const colRef = this.boardingPassDetailCol(uid, boardingPassId);
 
@@ -287,7 +284,7 @@ export class ProductsService {
         user: currentUser,
         idBoardingPass
       });
-      return res; // res.data trae lo que retorne tu CF
+      return res; 
     } catch (err) {
       console.log(err);
 
@@ -295,7 +292,7 @@ export class ProductsService {
     }
   }
 
-  // /users/{uid}/boardingPasses/{boardingPassId}/partialPaymentDetail
+  
   private partialPaymentDetailCol(uid: string, boardingPassId: string) {
     return collection(this.firestore, `users/${uid}/boardingPasses/${boardingPassId}/partialPaymentDetail`);
   }
@@ -303,7 +300,7 @@ export class ProductsService {
   async addPartialPaymentDetail(uid: string, boardingPassId: string, data: Omit<PartialPayment, 'id'> & { id?: string }) {
     const colRef = this.partialPaymentDetailCol(uid, boardingPassId);
 
-    // si quieres usar un ID específico (ej. partialPaymentId del form), pásalo; si no, autogenerado
+   
     const newDocRef = data.id ? doc(colRef, data.id) : doc(colRef);
     const id = newDocRef.id;
 
@@ -325,7 +322,7 @@ export class ProductsService {
   async getPartialPaymentDetails(uid: string, boardingPassId: string): Promise<PartialPayment[]> {
     const colRef = collection(this.firestore, `users/${uid}/boardingPasses/${boardingPassId}/partialPaymentDetail`);
 
-    // Si quieres ordenar por createdAt o startsAt
+   
     const q = query(colRef, orderBy('createdAt', 'desc'));
 
     const snap = await getDocs(q);
@@ -333,7 +330,6 @@ export class ProductsService {
   }
 
   async deletePartialPaymentDetail(uid: string, idBoardingPass: string, partialPaymentId: string) {
-    console.log(`Borrando parcial ${partialPaymentId} del pase ${idBoardingPass} del usuario ${uid}`);
     
     const ref = doc(this.firestore,
       `users/${uid}/boardingPasses/${idBoardingPass}/partialPaymentDetail/${partialPaymentId}`

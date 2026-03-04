@@ -9,7 +9,7 @@ import { ProductsService } from '../../services/products.service';
 import { ToastService } from '../../services/toast.service';
 import { firstValueFrom } from 'rxjs';
 import { Timestamp } from '@angular/fire/firestore';
-import { log } from 'console';
+
 
 
 type IBoardingPassEx = IBoardingPass & {
@@ -106,6 +106,8 @@ export class BoardingPassComponent {
 
   setTab(t: 'activos' | 'parcialidades' | 'inactivos') {
     this.tab = t;
+    this.filterForm.patchValue({ q: '' }, { emitEvent: false });
+
     if (t === 'activos') this.currentPageActivos = 1;
     else if (t === 'parcialidades') this.currentPageParciales = 1;
     else this.currentPageInactivos = 1;
@@ -130,6 +132,10 @@ export class BoardingPassComponent {
           this.allActive = normalized.filter(x => (x as any).active !== false); // default true si no existe
           this.allInactive = normalized.filter(x => (x as any).active === false);
           this.partialActive = this.allActive.filter(x => x.isParcialPayment === true);
+
+          this.activeFiltered = [...this.allActive];
+          this.partialFiltered = [...this.partialActive];
+          this.inactiveFiltered = [...this.allInactive];
 
           this.applyFilters();
           this.loading = false;
@@ -172,13 +178,11 @@ export class BoardingPassComponent {
       return (
         (p.name || '').toLowerCase().includes(q) ||
         (p.routeName || '').toLowerCase().includes(q) ||
-        (p.status || '').toLowerCase().includes(q)
+        (p.status || '').toLowerCase().includes(q) ||
+        this.getUserDisplayName(p).toLowerCase().includes(q) ||
+        this.getUserStudentId(p).toLowerCase().includes(q)
       );
     };
-
-    this.activeFiltered = this.allActive.filter(match);
-    this.inactiveFiltered = this.allInactive.filter(match);
-    this.partialFiltered = this.partialActive.filter(match);
 
     const sortByValidTo = (a: any, b: any) => {
       const da = this.toJsDate(a.validTo)?.getTime() || 0;
@@ -186,16 +190,20 @@ export class BoardingPassComponent {
       return da - db;
     };
 
-    this.activeFiltered.sort(sortByValidTo);
-    this.partialFiltered.sort(sortByValidTo);
-    this.inactiveFiltered.sort(sortByValidTo);
+    if (this.tab === 'activos') {
+      this.activeFiltered = this.allActive.filter(match).sort(sortByValidTo);
+      this.currentPageActivos = 1;
+    } else if (this.tab === 'parcialidades') {
+      this.partialFiltered = this.partialActive.filter(match).sort(sortByValidTo);
+      this.currentPageParciales = 1;
+    } else {
+      this.inactiveFiltered = this.allInactive.filter(match).sort(sortByValidTo);
+      this.currentPageInactivos = 1;
+    }
 
-    this.cdr.detectChanges();
-    this.currentPageActivos = 1;
-    this.currentPageParciales = 1;
-    this.currentPageInactivos = 1;
     this.cdr.markForCheck();
   }
+
 
   toJsDate(v: any): Date | null {
     if (!v) return null;
@@ -269,6 +277,7 @@ export class BoardingPassComponent {
 
   get pagedParciales() {
     const start = (this.currentPageParciales - 1) * this.pageSize;
+
     return this.partialFiltered.slice(start, start + this.pageSize);
   }
 
@@ -521,7 +530,6 @@ export class BoardingPassComponent {
       this.notification.error('Faltan datos de la compra (uid/idBoardingPass).', 'And Informa');
       return;
     }
-    console.log(nextEndsAt, chosen.endsAt);
 
     try {
       const addAmount = this.toNumber(chosen.amount);
@@ -584,7 +592,7 @@ export class BoardingPassComponent {
       this.applyFilters();
 
       this.showAddPartialPaymentModal = false;
-      this.cdr.detectChanges();
+      this.cdr.markForCheck();
 
       this.notification.success('Pago parcial agregado.', 'And Informa');
     } catch (e) {
@@ -712,20 +720,20 @@ export class BoardingPassComponent {
         : chosen.endsAt;
   }
 
- async openPaymentHistory(p: any) {
-  this.openedRowMenu = null;
+  async openPaymentHistory(p: any) {
+    this.openedRowMenu = null;
 
-  // Si necesitas, guarda el registro actual
-  this.selectedPurchase = p;
-this.partialPaymentsOfProduct =
-        await this.productsService.getPartialPaymentDetails(p.uid, p.idBoardingPass);
+    // Si necesitas, guarda el registro actual
+    this.selectedPurchase = p;
+    this.partialPaymentsOfProduct =
+      await this.productsService.getPartialPaymentDetails(p.uid, p.idBoardingPass);
 
 
-  this.showPaymentHistoryModal = true;
-}
+    this.showPaymentHistoryModal = true;
+  }
 
-closePaymentHistoryModal() {
-  this.showPaymentHistoryModal = false;
-}
+  closePaymentHistoryModal() {
+    this.showPaymentHistoryModal = false;
+  }
 
 }
