@@ -1,3 +1,5 @@
+import { GeoPoint } from "firebase/firestore";
+
 export interface UserCredentials {
     id: number;
     username: string;
@@ -73,9 +75,37 @@ export interface User1 {
  */
 
  export interface CustomerRoute {
-  id: string;       // doc id
-  name?: string;    // nombre visible
+  id: string;       
+  name?: string;    
   active?: boolean;
+  customerId?: string; 
+  customerName?: string; 
+  description?: string;
+  routeId?: string; 
+  kmzUrl?: string; 
+  imageUrl?: string; 
+
+}
+
+export interface stops { 
+  id: string;
+    active: boolean;
+    description: string;
+    geopoint?:GeoPoint;
+    imageUrl: string;
+    name: string;
+    order: number;
+    rounds?: IRound;
+    round2MinutesSinceStart? : string;
+    round3MinutesSinceStart? : string;
+    round1MinutesSinceStart? : string ;
+}
+
+interface IRound {
+    round1?: string;
+    round2?: string;
+    round3?: string;
+    round4?: string;
 }
 
 export type UserInfoKey =

@@ -1,1 +1,398 @@
-<p>operation-component works!</p>
+<!-- ===================== BUSCADOR ===================== -->
+<div class="space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+
+        <!-- SEARCH (izquierda) -->
+        <div class="flex items-center flex-1 max-w-md">
+            <div class="relative w-full">
+                <input type="text"
+                    class="form-control w-full rounded-lg border border-slate-300 px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                    placeholder="Buscar por nombre, descripción" [(ngModel)]="nameFilter"
+                    (input)="applyRouteFilters()" />
+                <span class="absolute inset-y-0 right-3 flex items-center text-slate-400">
+                    <i class="bi bi-search"></i>
+                </span>
+            </div>
+        </div>
+
+        <!-- BOTÓN (derecha) -->
+        <div class="flex items-center">
+            <button type="button" class="px-4 py-2 rounded-xl bg-[#235000] text-white font-semibold hover:opacity-90"
+                (click)="openCreateRoute()">
+                + Agregar
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- ===================== LISTA DE RUTAS ===================== -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="h-[220px] overflow-hidden">
+        <div class="h-full overflow-y-auto">
+            <table class="min-w-full text-sm">
+                <thead class="text-white sticky top-0 z-10" style="background-color:#235000;">
+                    <tr class="text-left">
+                        <th class="px-4 py-3 font-semibold">Nombre</th>
+                        <th class="px-4 py-3 font-semibold">Descripción</th>
+                        <th class="px-4 py-3 font-semibold">Estatus</th>
+                        <th class="px-4 py-3 font-semibold text-center">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-slate-200">
+                    <!-- LOADING -->
+                    <tr *ngIf="loadingRoutes">
+                        <td colspan="3" class="text-center py-8 text-slate-500">
+                            Cargando rutas...
+                        </td>
+                    </tr>
+
+                    <!-- ROWS -->
+                    <tr *ngFor="let r of pagedRoutes; let i = index" (click)="selectRoute(r)"
+                        class="cursor-pointer hover:bg-slate-50 transition" [ngClass]="[
+              i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40',
+              selectedRoute?.id === r.id ? 'ring-2 ring-[#235000]/30 bg-[#235000]/5' : ''
+            ]">
+                        <td class="px-4 py-3 font-medium text-slate-800 whitespace-nowrap">
+                            {{ r.name || '—' }}
+                        </td>
+
+                        <td class="px-4 py-3 text-slate-700">
+                            <span class="break-all">{{ r.description || '—' }}</span>
+                        </td>
+
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border"
+                                [ngClass]="r.active
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                  : 'bg-slate-100 text-slate-600 border-slate-200'">
+                                {{ r.active ? 'Activa' : 'Inactiva' }}
+                            </span>
+                        </td>
+
+                        <td class="px-4 py-3 whitespace-nowrap text-center ">
+
+                            <div class="relative inline-block group">
+
+                                <!-- BOTÓN -->
+                                <button type="button"
+                                    class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 focus:outline-none">
+
+                                    <!-- icono tres puntos -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <circle cx="5" cy="12" r="1.5" />
+                                        <circle cx="12" cy="12" r="1.5" />
+                                        <circle cx="19" cy="12" r="1.5" />
+                                    </svg>
+
+                                </button>
+
+                                <!-- MENU -->
+                                <div class="absolute right-0 mt-2 w-40 bg-white border border-slate-200 rounded-lg shadow-lg
+                                    opacity-0 invisible
+                                    group-hover:opacity-100 group-hover:visible
+                                    transition-all duration-150 z-20">
+
+                                    <button
+                                        class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2"
+                                        (click)="toggleRouteStatus(r)">
+
+                                        <!-- icon -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M18.364 5.636L5.636 18.364" />
+
+                                        </svg>
+                                        {{ r.active ? 'Desactivar' : 'Habilitar' }}
+                                    </button>
+
+                                    <button
+                                        class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                        (click)="deleteRoute(r)">
+
+                                        <!-- icon -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7L18.133 19.142A2 2 0 0116.138 21H7.862
+                                                 A2 2 0 015.867 19.142L5 7M10 11V17M14 11V17M9 7H15" />
+                                        </svg>
+
+                                        Eliminar
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div class="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-white">
+        <div class="text-sm text-slate-600">
+            Total: <span class="font-semibold">{{ routesFiltered.length }}</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button class="px-3 py-1 rounded-lg border border-slate-300 text-slate-700 disabled:opacity-50"
+                type="button" (click)="prevRoutesPage()" [disabled]="currentPageRoutes === 1">
+                ‹
+            </button>
+
+            <span class="text-sm font-semibold text-slate-700">
+                Página {{ currentPageRoutes }} / {{ totalPagesRoutes }}
+            </span>
+
+            <button class="px-3 py-1 rounded-lg border border-slate-300 text-slate-700 disabled:opacity-50"
+                type="button" (click)="nextRoutesPage()" [disabled]="currentPageRoutes >= totalPagesRoutes">
+                ›
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== PANEL DETALLE ===================== -->
+<div *ngIf="selectedRoute" class="mt-4 bg-white rounded-2xl border border-slate-200 p-4">
+
+    <!-- Header + Tabs + Botones -->
+    <div class="grid grid-cols-3 items-center mb-4">
+
+        <!-- LEFT: TITULO -->
+        <div class="text-lg font-semibold text-slate-800">
+            {{ isCreating ? 'Nueva Operación' : 'Información de la Operación' }}
+        </div>
+
+        <!-- CENTER: TABS -->
+        <div class="flex justify-center items-center gap-2">
+
+            <button type="button"
+                class="px-5 py-2 rounded-full border text-sm font-semibold transition-colors duration-200" [ngClass]="detailTab === 'detalle'
+        ? 'bg-[#235000] text-white border-[#235000]'
+        : 'border-slate-300 text-slate-600 hover:bg-[#235000] hover:text-white hover:border-[#235000]'"
+                (click)="setDetailTab('detalle')">
+                Detalle
+            </button>
+
+            <button type="button"
+                class="px-5 py-2 rounded-full border text-sm font-semibold transition-colors duration-200" [ngClass]="detailTab === 'puntos'
+        ? 'bg-[#235000] text-white border-[#235000]'
+        : 'border-slate-300 text-slate-600 hover:bg-[#235000] hover:text-white hover:border-[#235000]'"
+                (click)="setDetailTab('puntos')">
+                Puntos
+            </button>
+
+        </div>
+
+        <!-- RIGHT: BOTONES -->
+        <div class="flex justify-end gap-2">
+
+            <button type="button" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50"
+                *ngIf="!isCreating && !isEditing && detailTab === 'detalle'" (click)="startEdit()">
+                Editar
+            </button>
+
+            <button type="button" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50"
+                *ngIf="isEditing && detailTab === 'detalle'" (click)="cancelEdit()" [disabled]="isSaving">
+                Cancelar
+            </button>
+
+            <button type="button"
+                class="px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-60"
+                *ngIf="isEditing && detailTab === 'detalle'" (click)="saveRouteFields()" [disabled]="isSaving">
+                {{ isSaving ? 'Guardando…' : 'Guardar' }}
+            </button>
+
+            <button type="button"
+                class="px-4 py-2 rounded-xl bg-[#235000] text-white font-semibold hover:opacity-90 disabled:opacity-60"
+                (click)="loadRouteDetail()" [disabled]="loadingDetail">
+                {{ loadingDetail ? 'Cargando…' : 'Actualizar' }}
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- Body -->
+    <div class="mt-4">
+
+        <!-- Loading -->
+        <div *ngIf="loadingDetail" class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-600">
+            Cargando información...
+        </div>
+
+        <!-- ===================== DETALLE ===================== -->
+        <div *ngIf="!loadingDetail && detailTab === 'detalle'">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                <!-- Nombre -->
+                <div class="rounded-xl border border-slate-200 p-3">
+                    <div class="text-xs text-slate-500">Nombre</div>
+
+                    <div *ngIf="!isEditing" class="text-sm font-semibold text-slate-900 mt-1">
+                        {{ routeDetail?.name || selectedRoute?.name || '—' }}
+                    </div>
+
+                    <div *ngIf="isEditing" class="mt-2">
+                        <input
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#235000]/30"
+                            [formControl]="routeEditForm.controls.name" />
+                        <div *ngIf="routeEditForm.controls.name.touched && routeEditForm.controls.name.invalid"
+                            class="text-xs text-red-600 mt-1">
+                            El nombre es requerido.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Descripción -->
+                <div class="rounded-xl border border-slate-200 p-3">
+                    <div class="text-xs text-slate-500">Descripción</div>
+
+                    <div *ngIf="!isEditing" class="text-sm font-semibold text-slate-900 mt-1">
+                        {{ routeDetail?.description || '—' }}
+                    </div>
+
+                    <div *ngIf="isEditing" class="mt-2">
+                        <input
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#235000]/30"
+                            [formControl]="routeEditForm.controls.description" />
+                    </div>
+                </div>
+
+                <!-- Estatus (solo lectura) -->
+                <div class="rounded-xl border border-slate-200 p-3">
+                    <div class="text-xs text-slate-500">Estatus</div>
+                    <div class="text-sm font-semibold text-slate-900 mt-1">
+                        {{ (routeDetail?.active ?? selectedRoute?.active) ? 'Activa' : 'Inactiva' }}
+                    </div>
+                </div>
+
+                <!-- KMZ URL -->
+                <div class="rounded-xl border border-slate-200 p-3 md:col-span-3">
+                    <div class="text-xs text-slate-500">KMZ URL</div>
+
+                    <div *ngIf="!isEditing" class="text-sm font-semibold text-slate-900 mt-1 break-all">
+                        {{ routeDetail?.kmzUrl || '—' }}
+                    </div>
+
+                    <div *ngIf="isEditing" class="mt-2">
+                        <input
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#235000]/30"
+                            placeholder="https://..." [formControl]="routeEditForm.controls.kmzUrl" />
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ===================== PUNTOS ===================== -->
+        <div *ngIf="!loadingDetail && detailTab === 'puntos'">
+
+            <div *ngIf="!routePoints.length"
+                class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                No hay puntos para mostrar.
+            </div>
+
+            <div *ngIf="routePoints.length" class="overflow-hidden rounded-xl border border-slate-200">
+                <div class="max-h-[320px] overflow-auto">
+                    <table class="w-full text-sm">
+                        <thead class="sticky top-0 bg-white border-b border-slate-200">
+
+                            <!-- HEADER PRINCIPAL -->
+                            <tr class="text-left text-xs text-slate-500">
+                                <th class="px-4 py-3 font-semibold">Orden</th>
+                                <th class="px-4 py-3 font-semibold">Nombre</th>
+                                <th class="px-4 py-3 font-semibold">Descripción</th>
+                                <th class="px-4 py-3 font-semibold">Ubicación</th>
+
+                                <th class="px-4 py-3 font-semibold text-center" colspan="2">Día</th>
+                                <th class="px-4 py-3 font-semibold text-center" colspan="2">Tarde</th>
+                                <th class="px-4 py-3 font-semibold text-center" colspan="2">Noche</th>
+
+                                <th class="px-4 py-3 font-semibold text-right">...</th>
+                            </tr>
+
+                            <!-- HEADER DETALLE -->
+                            <tr class="text-xs text-slate-400 text-left border-t border-slate-100">
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                <th class="px-4 py-2">Hora</th>
+                                <th class="px-4 py-2">Minutos</th>
+
+                                <th class="px-4 py-2">Hora</th>
+                                <th class="px-4 py-2">Minutos</th>
+
+                                <th class="px-4 py-2">Hora</th>
+                                <th class="px-4 py-2">Minutos</th>
+
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-slate-100">
+                            <tr *ngFor="let p of routePoints; let i = index" class="hover:bg-slate-50"
+                                [ngClass]="!p.active ? 'opacity-60 italic' : ''">
+
+                                <td class="px-4 py-3 font-semibold text-slate-800">
+                                    {{ p.order }}
+                                </td>
+
+                                <td class="px-4 py-3 text-slate-700">
+                                    {{ p.name || '—' }}
+                                </td>
+
+                                <td class="px-4 py-3 text-slate-700">
+                                    {{ p.description || '—' }}
+                                </td>
+
+                                <td class="px-4 py-3 text-slate-700 whitespace-nowrap">
+                                    {{ p.geopoint?.latitude ?? '—' }}, {{ p.geopoint?.longitude ?? '—' }}
+                                </td>
+
+                                <!-- Día -->
+                                <td class="px-4 py-3 text-slate-700">
+                                    {{ getHour(p.rounds?.round1) }}
+                                </td>
+                                <td class="px-4 py-3 text-slate-700">
+                                    {{ p.round1MinutesSinceStart ?? getMinutes(p.rounds?.round1) }}
+                                </td>
+
+                                <!-- Tarde -->
+                                <td class="px-4 py-3 text-slate-700">
+                                    {{ getHour(p.rounds?.round2) }}
+                                </td>
+                                <td class="px-4 py-3 text-slate-700">
+                                    {{ p.round2MinutesSinceStart ?? getMinutes(p.rounds?.round2) }}
+                                </td>
+
+                                <!-- Noche -->
+                                <td class="px-4 py-3 text-slate-700">
+                                    {{ getHour(p.rounds?.round3) }}
+                                </td>
+                                <td class="px-4 py-3 text-slate-700">
+                                    {{ p.round3MinutesSinceStart ?? getMinutes(p.rounds?.round3) }}
+                                </td>
+
+                                <td class="px-4 py-3 text-slate-500 text-right">
+                                    ...
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
