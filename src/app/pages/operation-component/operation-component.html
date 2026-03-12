@@ -73,7 +73,7 @@
 
                         <td class="px-4 py-3 whitespace-nowrap text-center ">
 
-                            <div class="relative inline-block group">
+                            <div class="inline-block group">
 
                                 <!-- BOTÓN -->
                                 <button type="button"
@@ -186,7 +186,7 @@
         ? 'bg-[#235000] text-white border-[#235000]'
         : 'border-slate-300 text-slate-600 hover:bg-[#235000] hover:text-white hover:border-[#235000]'"
                 (click)="setDetailTab('puntos')">
-                Puntos
+                Estaciones
             </button>
 
         </div>
@@ -202,6 +202,12 @@
             <button type="button" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50"
                 *ngIf="isEditing && detailTab === 'detalle'" (click)="cancelEdit()" [disabled]="isSaving">
                 Cancelar
+            </button>
+
+            <button type="button" *ngIf="detailTab === 'puntos' && selectedRoute"
+                class="px-4 py-2 rounded-xl border border-[#235000] text-[#235000] font-semibold hover:bg-[#235000] hover:text-white transition"
+                (click)="openCreatePointModal()">
+                + Agregar estación
             </button>
 
             <button type="button"
@@ -292,7 +298,7 @@
             </div>
         </div>
 
-        <!-- ===================== PUNTOS ===================== -->
+        <!-- ===================== Estaciones  ===================== -->
         <div *ngIf="!loadingDetail && detailTab === 'puntos'">
 
             <div *ngIf="!routePoints.length"
@@ -340,22 +346,23 @@
                         </thead>
 
                         <tbody class="divide-y divide-slate-100">
-                            <tr *ngFor="let p of routePoints; let i = index" class="hover:bg-slate-50"
-                                [ngClass]="!p.active ? 'opacity-60 italic' : ''">
+                            <tr *ngFor="let p of pagedRoutePointsList; let i = index" class="hover:bg-slate-50">
 
-                                <td class="px-4 py-3 font-semibold text-slate-800">
+                                <td class="px-4 py-3 font-semibold"
+                                    [ngClass]="p.active ? 'text-slate-800' : 'text-slate-400 italic'">
                                     {{ p.order }}
                                 </td>
 
-                                <td class="px-4 py-3 text-slate-700">
-                                    {{ p.name || '—' }}
+                                <td class="px-4 py-3" [ngClass]="p.active ? 'text-slate-700' : 'text-slate-400 italic'">
+                                    {{ p.name || '—' }} <span *ngIf="!p.active">(Inactiva)</span>
                                 </td>
 
-                                <td class="px-4 py-3 text-slate-700">
+                                <td class="px-4 py-3" [ngClass]="p.active ? 'text-slate-700' : 'text-slate-400 italic'">
                                     {{ p.description || '—' }}
                                 </td>
 
-                                <td class="px-4 py-3 text-slate-700 whitespace-nowrap">
+                                <td class="px-4 py-3 whitespace-nowrap"
+                                    [ngClass]="p.active ? 'text-slate-700' : 'text-slate-400 italic'">
                                     {{ p.geopoint?.latitude ?? '—' }}, {{ p.geopoint?.longitude ?? '—' }}
                                 </td>
 
@@ -383,8 +390,45 @@
                                     {{ p.round3MinutesSinceStart ?? getMinutes(p.rounds?.round3) }}
                                 </td>
 
-                                <td class="px-4 py-3 text-slate-500 text-right">
-                                    ...
+                                <td class="px-4 py-3 whitespace-nowrap text-center ">
+                                    <div class=" inline-block">
+                                        <!-- botón -->
+                                        <button type="button"
+                                            class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 focus:outline-none"
+                                            (click)="toggleMenuIndex(i); $event.stopPropagation()">
+                                            ⋯
+                                        </button>
+
+                                        <!-- menú -->
+                                        <div *ngIf="openMenuIndex === i"
+                                            class="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+                                            <button type="button"
+                                                class="flex items-center w-full px-4 py-2 text-sm hover:bg-slate-100"
+                                                (click)="generateQR(p); $event.stopPropagation(); closeMenu()">
+                                                🖨️ Generar QR
+                                            </button>
+
+                                            <button type="button"
+                                                class="flex items-center w-full px-4 py-2 text-sm hover:bg-slate-100"
+                                                (click)="toggleActive(p); $event.stopPropagation(); closeMenu()">
+                                                ⏸ {{ p.active ? 'Desactivar' : 'Habilitar' }}
+                                            </button>
+
+                                            <button type="button"
+                                                class="flex items-center w-full px-4 py-2 text-sm hover:bg-slate-100"
+                                                (click)="openEditPointModal(p, $event)">
+                                                ✏️ Editar
+                                            </button>
+
+                                            <hr class="border-slate-200" />
+
+                                            <button type="button"
+                                                class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                                (click)="deletePoint(p); $event.stopPropagation(); closeMenu()">
+                                                🗑 Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
 
@@ -392,7 +436,148 @@
                     </table>
                 </div>
             </div>
+            <div class="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-white">
+                <div class="text-sm text-slate-600">
+                    Total: <span class="font-semibold">{{ routePoints.length }}</span>
+                </div>
 
+                <div class="flex items-center gap-2">
+                    <button class="px-3 py-1 rounded-lg border border-slate-300 text-slate-700 disabled:opacity-50"
+                        type="button" (click)="prevPointsPage()" [disabled]="currentPagePoints === 1">
+                        ‹
+                    </button>
+
+                    <span class="text-sm font-semibold text-slate-700">
+                        Página {{ currentPagePoints }} / {{ totalPagesPoints }}
+                    </span>
+
+                    <button class="px-3 py-1 rounded-lg border border-slate-300 text-slate-700 disabled:opacity-50"
+                        type="button" (click)="nextPointsPage()" [disabled]="currentPagePoints >= totalPagesPoints">
+                        ›
+                    </button>
+                </div>
+            </div>
         </div>
+    </div>
+</div>
+
+<!-- ===================== MODAL CREAR ESTACIÓN ===================== -->
+<div *ngIf="showCreatePointModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-6">
+
+    <div class="w-full max-w-4xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-5 border-b border-slate-200">
+            <h3 class="text-2xl font-bold text-slate-800">
+                {{ isEditingPoint ? 'Editar Estación' : 'Nueva Estación' }}
+            </h3>
+
+            <button type="button" class="text-slate-400 hover:text-slate-700 text-3xl leading-none"
+                (click)="closeCreatePointModal()">
+                ×
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 max-h-[75vh] overflow-y-auto">
+            <form [formGroup]="pointForm" class="space-y-6">
+
+                <!-- Nombre -->
+                <div>
+                    <input type="text" formControlName="name" placeholder="Nombre"
+                        class="w-full rounded-lg border border-slate-300 px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-[#235000]/30" />
+                </div>
+
+                <!-- Descripción -->
+                <div>
+                    <input type="text" formControlName="description" placeholder="Descripción"
+                        class="w-full rounded-lg border border-slate-300 px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-[#235000]/30" />
+                </div>
+
+                <!-- Lat / Lng -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Latitud</label>
+                        <input type="number" formControlName="latitude"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#235000]/30" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Longitud</label>
+                        <input type="number" formControlName="longitude"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#235000]/30" />
+                    </div>
+                </div>
+
+                <!-- Horarios -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Horario día</label>
+                        <input type="text" formControlName="round1Hour" placeholder="00:00"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#235000]/30" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Horario tarde</label>
+                        <input type="text" formControlName="round2Hour" placeholder="00:00"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#235000]/30" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Horario noche</label>
+                        <input type="text" formControlName="round3Hour" placeholder="00:00"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#235000]/30" />
+                    </div>
+                </div>
+
+                <!-- Minutos -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Minutos día</label>
+                        <input type="number" formControlName="round1MinutesSinceStart" placeholder="00"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#235000]/30" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Minutos tarde</label>
+                        <input type="number" formControlName="round2MinutesSinceStart" placeholder="00"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#235000]/30" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Minutos noche</label>
+                        <input type="number" formControlName="round3MinutesSinceStart" placeholder="00"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#235000]/30" />
+                    </div>
+                </div>
+
+                <!-- Orden -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Orden</label>
+                    <input type="number" formControlName="order"
+                        class="w-full rounded-lg border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#235000]/30" />
+                </div>
+
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex justify-end gap-3 px-6 py-5 border-t border-slate-200 bg-slate-50">
+            <button type="button" class="px-5 py-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-white"
+                (click)="closeCreatePointModal()">
+                Cancelar
+            </button>
+
+            <button type="button"
+                class="px-5 py-3 rounded-xl bg-[#235000] text-white font-semibold hover:opacity-90 disabled:opacity-60"
+                [disabled]="savingPoint" (click)="isEditingPoint ? updatePoint() : createPoint()">
+                {{
+                savingPoint
+                ? (isEditingPoint ? 'Guardando…' : 'Creando…')
+                : (isEditingPoint ? 'Guardar cambios' : 'Crear')
+                }}
+            </button>
+        </div>
+
     </div>
 </div>
